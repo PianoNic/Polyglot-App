@@ -100,6 +100,20 @@
 
               <hlm-dropdown-menu-separator />
 
+              <hlm-dropdown-menu-group>
+                @for (option of _themeOptions; track option.mode) {
+                <button hlmDropdownMenuItem (click)="setTheme(option.mode)">
+                  <ng-icon [name]="option.icon"></ng-icon>
+                  {{ option.label }}
+                  @if (themeMode() === option.mode) {
+                  <span class="ml-auto text-xs text-muted-foreground">✓</span>
+                  }
+                </button>
+                }
+              </hlm-dropdown-menu-group>
+
+              <hlm-dropdown-menu-separator />
+
               <button hlmDropdownMenuItem (click)="logout()">
                 <ng-icon name="lucideLogOut"></ng-icon>
                 Log out

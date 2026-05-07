@@ -14,7 +14,11 @@ import {
   lucideCreditCard,
   lucideBell,
   lucideLogOut,
+  lucideSun,
+  lucideMoon,
+  lucideMonitor,
 } from '@ng-icons/lucide';
+import { ThemeService, ThemeMode } from '../theme';
 import { HlmSidebarImports, HlmSidebarService } from '@spartan-ng/helm/sidebar';
 import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
 import { HlmAvatarImports } from '@spartan-ng/helm/avatar';
@@ -41,6 +45,9 @@ import { HlmAvatarImports } from '@spartan-ng/helm/avatar';
       lucideCreditCard,
       lucideBell,
       lucideLogOut,
+      lucideSun,
+      lucideMoon,
+      lucideMonitor,
     }),
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,6 +58,13 @@ export class Sidenav {
   private readonly _sidebarService = inject(HlmSidebarService);
   private readonly _oidcSecurityService = inject(OidcSecurityService);
   private readonly _destroyRef = inject(DestroyRef);
+  private readonly _theme = inject(ThemeService);
+  protected readonly themeMode = this._theme.mode;
+  protected readonly _themeOptions: ReadonlyArray<{ mode: ThemeMode; label: string; icon: string }> = [
+    { mode: 'light', label: 'Light', icon: 'lucideSun' },
+    { mode: 'dark', label: 'Dark', icon: 'lucideMoon' },
+    { mode: 'system', label: 'System', icon: 'lucideMonitor' },
+  ];
   protected readonly _menuSide = computed(() =>
     this._sidebarService.isMobile() ? 'top' : 'right'
   );
@@ -69,6 +83,10 @@ export class Sidenav {
       avatar: data?.picture ?? '',
     };
   });
+
+  protected setTheme(mode: ThemeMode): void {
+    this._theme.set(mode);
+  }
 
   protected logout(): void {
     this._oidcSecurityService
