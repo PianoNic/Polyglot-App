@@ -14,9 +14,9 @@ namespace Polyglot.Application.Queries
             return Result<AppDto>.Success(new AppDto(
                 configuration["Oidc:Authority"] ?? string.Empty,
                 configuration["Oidc:ClientId"] ?? string.Empty,
-                configuration["Oidc:RedirectUri"] ?? "http://localhost:4200/callback",
+                configuration["Oidc:RedirectUri"] ?? "http://localhost:4200/",
                 configuration["Oidc:PostLogoutRedirectUri"] ?? "http://localhost:4200/",
-                configuration["Oidc:Scope"] ?? "openid profile email groups picture",
+                configuration["Oidc:Scope"] ?? "openid profile email groups picture offline_access",
                 "1.0.0"
             ));
         }

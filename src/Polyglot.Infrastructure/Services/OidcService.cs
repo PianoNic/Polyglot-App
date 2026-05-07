@@ -29,7 +29,7 @@ namespace Polyglot.Infrastructure.Services
                 GetValue(userInfo, "email") ?? identity.FindFirst(ClaimTypes.Email)?.Value,
                 GetValue(userInfo, "name") ?? identity.FindFirst(ClaimTypes.Name)?.Value,
                 GetValue(userInfo, "picture") ?? identity.FindFirst("picture")?.Value,
-                GetArray(userInfo, "groups") ?? identity.FindAll("groups").Select(c => c.Value).ToList());
+                GetArray(userInfo, "roles") ?? identity.FindAll("roles").Select(c => c.Value).ToList());
         }
 
         private async Task<JsonElement?> FetchUserInfoAsync(CancellationToken cancellationToken)

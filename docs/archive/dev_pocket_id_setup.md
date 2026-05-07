@@ -74,7 +74,7 @@ Navigate to **Administration → OIDC Clients** and click **Add OIDC Client**.
 Fill in the following fields:
 
 - **Name:** `Polyglot`
-- **Callback URLs:** `http://localhost:5173/callback`, `http://localhost:5246/swagger/oauth2-redirect.html`
+- **Callback URLs:** `http://localhost:4200/callback`, `http://localhost:5246/swagger/oauth2-redirect.html`
 - **Public Client:** enable — **PKCE** is then activated automatically
 
 Click **Save**.

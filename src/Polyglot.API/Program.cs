@@ -25,30 +25,15 @@ builder.Services.AddSwaggerGen(options =>
     var authority = builder.Configuration["Oidc:Authority"]
         ?? throw new InvalidOperationException("Oidc:Authority not configured");
 
-    options.AddSecurityDefinition("OAuth2", new OpenApiSecurityScheme
+    options.AddSecurityDefinition("OpenIdConnect", new OpenApiSecurityScheme
     {
-        Type = SecuritySchemeType.OAuth2,
-        Flows = new OpenApiOAuthFlows
-        {
-            AuthorizationCode = new OpenApiOAuthFlow
-            {
-                AuthorizationUrl = new Uri($"{authority}/authorize"),
-                TokenUrl = new Uri($"{authority}/api/oidc/token"),
-                Scopes = new Dictionary<string, string>
-                {
-                    ["openid"] = "OpenID Connect",
-                    ["profile"] = "User profile",
-                    ["email"] = "User email",
-                    ["groups"] = "User groups (roles)",
-                    ["picture"] = "Profile Picture",
-                }
-            }
-        }
+        Type = SecuritySchemeType.OpenIdConnect,
+        OpenIdConnectUrl = new Uri($"{authority}/.well-known/openid-configuration"),
     });
 
     options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
-        [new OpenApiSecuritySchemeReference("OAuth2", document)] = new List<string>()
+        [new OpenApiSecuritySchemeReference("OpenIdConnect", document)] = new List<string>()
     });
 });
 
@@ -85,7 +70,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.Authority = builder.Configuration["Oidc:Authority"];
         options.RequireHttpsMetadata = builder.Configuration.GetValue("Oidc:RequireHttpsMetadata", true);
         options.TokenValidationParameters.NameClaimType = "name";
-        options.TokenValidationParameters.RoleClaimType = "groups";
+        options.TokenValidationParameters.RoleClaimType = "roles";
         options.TokenValidationParameters.ValidateAudience = false;
     })
     .AddUserSync();
@@ -110,11 +95,6 @@ if (app.Environment.IsDevelopment())
     {
         options.OAuthClientId(builder.Configuration["Oidc:ClientId"]);
         options.OAuthUsePkce();
-        options.OAuthScopes("openid", "profile", "email", "groups", "picture");
-
-        options.UseRequestInterceptor(
-            "(req) => { if (req.url.includes('/oidc/token')) { delete req.headers['X-Requested-With']; } return req; }"
-        );
     });
 }
 
