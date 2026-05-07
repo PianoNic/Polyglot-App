@@ -15,7 +15,7 @@ services:
     image: quay.io/keycloak/keycloak:26.6
     container_name: polyglot-keycloak-dev
     restart: unless-stopped
-    command: start-dev
+    command: start-dev --import-realm
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
@@ -24,6 +24,7 @@ services:
       - "8080:8080"
     volumes:
       - ./keycloak/polyglot-realm.json:/opt/keycloak/data/import/polyglot-realm.json:ro
+      - ./keycloak/keycloakify/dist_keycloak/keycloak-theme-for-kc-all-other-versions.jar:/opt/keycloak/providers/polyglot-keycloak-theme.jar:ro
       - keycloak-data-dev:/opt/keycloak/data
 
 volumes:

@@ -21,7 +21,7 @@ The compose file mounts `keycloak/polyglot-realm.json` and starts Keycloak with 
 | Item            | Value                                                  |
 |-----------------|--------------------------------------------------------|
 | Realm           | `polyglot`                                             |
-| Client ID       | `polyglot-frontend` (public, PKCE)                     |
+| Client ID       | `polyglot` (public, PKCE)                     |
 | Roles           | `user` (default), `admin`                              |
 | Default admin   | `admin@polyglot.local` / `admin` (assigned both roles) |
 | Registration    | Open — anyone can sign up at `/realms/polyglot/...`    |

@@ -35,7 +35,7 @@ dotnet user-secrets set "ConnectionStrings:PolyglotDatabase" "Host=localhost;Por
 
 dotnet user-secrets set "Oidc:Authority" "http://localhost:8080/realms/polyglot"
 dotnet user-secrets set "Oidc:RequireHttpsMetadata" "false"
-dotnet user-secrets set "Oidc:ClientId" "polyglot-frontend"
+dotnet user-secrets set "Oidc:ClientId" "polyglot"
 dotnet user-secrets set "Oidc:RedirectUri" "http://localhost:4200/"
 dotnet user-secrets set "Oidc:PostLogoutRedirectUri" "http://localhost:4200"
 dotnet user-secrets set "Oidc:Scope" "openid profile email roles offline_access"
@@ -48,7 +48,7 @@ dotnet user-secrets set "OpenRouter:DefaultModel" "openai/gpt-5"
 
 The `OpenRouter:ApiKey` is obtained from [openrouter.ai/keys](https://openrouter.ai/keys).
 
-The Keycloak realm is pre-configured with `polyglot-frontend` as the public client —
+The Keycloak realm is pre-configured with `polyglot` as the public client —
 see [`dev_keycloak_setup.md`](./dev_keycloak_setup.md).
 
 To verify:
@@ -71,7 +71,7 @@ Paste in:
   "Oidc": {
     "Authority": "http://localhost:8080/realms/polyglot",
     "RequireHttpsMetadata": false,
-    "ClientId": "polyglot-frontend",
+    "ClientId": "polyglot",
     "RedirectUri": "http://localhost:4200/",
     "PostLogoutRedirectUri": "http://localhost:4200",
     "Scope": "openid profile email roles offline_access"
