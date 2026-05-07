@@ -38,7 +38,7 @@ dotnet user-secrets set "Oidc:RequireHttpsMetadata" "false"
 dotnet user-secrets set "Oidc:ClientId" "polyglot"
 dotnet user-secrets set "Oidc:RedirectUri" "http://localhost:4200/"
 dotnet user-secrets set "Oidc:PostLogoutRedirectUri" "http://localhost:4200"
-dotnet user-secrets set "Oidc:Scope" "openid profile email roles offline_access"
+dotnet user-secrets set "Oidc:Scope" "openid profile email roles"
 
 dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:4200"
 
@@ -74,7 +74,7 @@ Paste in:
     "ClientId": "polyglot",
     "RedirectUri": "http://localhost:4200/",
     "PostLogoutRedirectUri": "http://localhost:4200",
-    "Scope": "openid profile email roles offline_access"
+    "Scope": "openid profile email roles"
   },
   "Cors": {
     "AllowedOrigins": ["http://localhost:4200"]
