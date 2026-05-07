@@ -149,7 +149,7 @@
   "clientPolicies": {
     "policies": []
   },
-  "clients": {
+  "clients": [{
     "id": "4f8c822a-feee-4a62-a672-be11b8f854a2",
     "clientId": "polyglot",
     "name": "Polyglot",
@@ -217,7 +217,7 @@
       "configure": true,
       "manage": true
     }
-  },
+  }],
   "roles": {
     "realm": [
       {
@@ -235,63 +235,6 @@
         "composite": false,
         "clientRole": false,
         "containerId": "bc1a14a6-f177-4755-906c-902ef9aa82a5"
-      }
-    ]
-  },
-  "clientScopes": {
-    "id": "16fca941-9560-494e-9a32-2a1c142c0c83",
-    "name": "roles",
-    "description": "OpenID Connect scope for add user roles to the access token",
-    "protocol": "openid-connect",
-    "attributes": {
-      "include.in.token.scope": "false",
-      "consent.screen.text": "${rolesScopeConsentText}",
-      "display.on.consent.screen": "true"
-    },
-    "protocolMappers": [
-      {
-        "id": "9fe9c526-3da1-4ba7-ae24-ff5b8a79f14d",
-        "name": "client roles",
-        "protocol": "openid-connect",
-        "protocolMapper": "oidc-usermodel-client-role-mapper",
-        "consentRequired": false,
-        "config": {
-          "user.attribute": "foo",
-          "introspection.token.claim": "true",
-          "access.token.claim": "true",
-          "claim.name": "resource_access.${client_id}.roles",
-          "jsonType.label": "String",
-          "multivalued": "true"
-        }
-      },
-      {
-        "id": "5a8742fc-5efe-4836-a1a2-18d831a65652",
-        "name": "audience resolve",
-        "protocol": "openid-connect",
-        "protocolMapper": "oidc-audience-resolve-mapper",
-        "consentRequired": false,
-        "config": {
-          "introspection.token.claim": "true",
-          "access.token.claim": "true"
-        }
-      },
-      {
-        "id": "bea45794-2fa4-4dab-83eb-402d1da63da6",
-        "name": "realm roles",
-        "protocol": "openid-connect",
-        "protocolMapper": "oidc-usermodel-realm-role-mapper",
-        "consentRequired": false,
-        "config": {
-          "introspection.token.claim": "true",
-          "multivalued": "true",
-          "userinfo.token.claim": "true",
-          "user.attribute": "foo",
-          "id.token.claim": "true",
-          "lightweight.claim": "false",
-          "access.token.claim": "true",
-          "claim.name": "roles",
-          "jsonType.label": "String"
-        }
       }
     ]
   }
