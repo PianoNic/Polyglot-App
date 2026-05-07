@@ -1,0 +1,12 @@
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { HlmSidebarImports } from '@spartan-ng/helm/sidebar';
+import { Sidenav } from '../../sidenav/sidenav';
+
+@Component({
+  selector: 'polyglot-app-layout',
+  imports: [RouterOutlet, HlmSidebarImports, Sidenav],
+  templateUrl: './app-layout.html',
+  styleUrl: './app-layout.css',
+})
+export class AppLayout {}

@@ -22,10 +22,10 @@ namespace Polyglot.API.Controllers
             return BadRequest(result.Error);
         }
 
-        [HttpGet("sync")]
+        [HttpGet("callback")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Sync(CancellationToken cancellationToken)
+        public async Task<IActionResult> Callback(CancellationToken cancellationToken)
         {
             var result = await mediator.Send(new SyncUserCommand(), cancellationToken);
             if (result.IsSuccess)

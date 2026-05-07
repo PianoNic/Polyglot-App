@@ -64,8 +64,8 @@ export class AdminService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
-        // authentication (OAuth2) required
-        localVarHeaders = this.configuration.addCredentialToHeaders('OAuth2', 'Authorization', localVarHeaders, 'Bearer ');
+        // authentication (OpenIdConnect) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('OpenIdConnect', 'Authorization', localVarHeaders, 'Bearer ');
 
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
             'text/plain',
@@ -120,8 +120,8 @@ export class AdminService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
-        // authentication (OAuth2) required
-        localVarHeaders = this.configuration.addCredentialToHeaders('OAuth2', 'Authorization', localVarHeaders, 'Bearer ');
+        // authentication (OpenIdConnect) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('OpenIdConnect', 'Authorization', localVarHeaders, 'Bearer ');
 
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
             'text/plain',
@@ -180,8 +180,8 @@ export class AdminService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
-        // authentication (OAuth2) required
-        localVarHeaders = this.configuration.addCredentialToHeaders('OAuth2', 'Authorization', localVarHeaders, 'Bearer ');
+        // authentication (OpenIdConnect) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('OpenIdConnect', 'Authorization', localVarHeaders, 'Bearer ');
 
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
             'text/plain',
@@ -237,8 +237,8 @@ export class AdminService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
-        // authentication (OAuth2) required
-        localVarHeaders = this.configuration.addCredentialToHeaders('OAuth2', 'Authorization', localVarHeaders, 'Bearer ');
+        // authentication (OpenIdConnect) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('OpenIdConnect', 'Authorization', localVarHeaders, 'Bearer ');
 
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
             'text/plain',
@@ -305,8 +305,8 @@ export class AdminService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
-        // authentication (OAuth2) required
-        localVarHeaders = this.configuration.addCredentialToHeaders('OAuth2', 'Authorization', localVarHeaders, 'Bearer ');
+        // authentication (OpenIdConnect) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('OpenIdConnect', 'Authorization', localVarHeaders, 'Bearer ');
 
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
             'text/plain',
@@ -362,8 +362,8 @@ export class AdminService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
-        // authentication (OAuth2) required
-        localVarHeaders = this.configuration.addCredentialToHeaders('OAuth2', 'Authorization', localVarHeaders, 'Bearer ');
+        // authentication (OpenIdConnect) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('OpenIdConnect', 'Authorization', localVarHeaders, 'Bearer ');
 
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
             'text/plain',
@@ -430,8 +430,8 @@ export class AdminService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
-        // authentication (OAuth2) required
-        localVarHeaders = this.configuration.addCredentialToHeaders('OAuth2', 'Authorization', localVarHeaders, 'Bearer ');
+        // authentication (OpenIdConnect) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('OpenIdConnect', 'Authorization', localVarHeaders, 'Bearer ');
 
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
             'text/plain',
@@ -491,8 +491,8 @@ export class AdminService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
-        // authentication (OAuth2) required
-        localVarHeaders = this.configuration.addCredentialToHeaders('OAuth2', 'Authorization', localVarHeaders, 'Bearer ');
+        // authentication (OpenIdConnect) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('OpenIdConnect', 'Authorization', localVarHeaders, 'Bearer ');
 
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
             'text/plain',
@@ -564,8 +564,8 @@ export class AdminService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
-        // authentication (OAuth2) required
-        localVarHeaders = this.configuration.addCredentialToHeaders('OAuth2', 'Authorization', localVarHeaders, 'Bearer ');
+        // authentication (OpenIdConnect) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('OpenIdConnect', 'Authorization', localVarHeaders, 'Bearer ');
 
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
             'text/plain',

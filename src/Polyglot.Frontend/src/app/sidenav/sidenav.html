@@ -39,16 +39,16 @@
         <li hlmSidebarMenuItem>
           <button hlmSidebarMenuButton size="lg" [hlmDropdownMenuTrigger]="userMenu" [side]="_menuSide()" align="end">
             <hlm-avatar class="rounded-lg">
-              @if (_user.avatar) {
-              <img [src]="_user.avatar" [alt]="_user.name" hlmAvatarImage />
+              @if (_user().avatar) {
+              <img [src]="_user().avatar" [alt]="_user().name" hlmAvatarImage />
               }
               <span class="rounded-lg bg-[#FD005B] text-white" hlmAvatarFallback>
-                {{ _user.name.charAt(0) }}
+                {{ _user().name.charAt(0) }}
               </span>
             </hlm-avatar>
             <div class="grid flex-1 text-left text-sm leading-tight">
-              <span class="truncate font-medium">{{ _user.name }}</span>
-              <span class="truncate text-xs">{{ _user.email }}</span>
+              <span class="truncate font-medium">{{ _user().name }}</span>
+              <span class="truncate text-xs">{{ _user().email }}</span>
             </div>
             <ng-icon name="lucideChevronsUpDown" class="ml-auto text-base"></ng-icon>
           </button>
@@ -58,16 +58,16 @@
               <hlm-dropdown-menu-label>
                 <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                   <hlm-avatar class="rounded-lg">
-                    @if (_user.avatar) {
-                    <img [src]="_user.avatar" [alt]="_user.name" hlmAvatarImage />
+                    @if (_user().avatar) {
+                    <img [src]="_user().avatar" [alt]="_user().name" hlmAvatarImage />
                     }
                     <span class="rounded-lg bg-[#FD005B] text-white" hlmAvatarFallback>
-                      {{ _user.name.charAt(0) }}
+                      {{ _user().name.charAt(0) }}
                     </span>
                   </hlm-avatar>
                   <div class="grid flex-1 text-left text-sm leading-tight">
-                    <span class="truncate font-medium">{{ _user.name }}</span>
-                    <span class="truncate text-xs">{{ _user.email }}</span>
+                    <span class="truncate font-medium">{{ _user().name }}</span>
+                    <span class="truncate text-xs">{{ _user().email }}</span>
                   </div>
                 </div>
               </hlm-dropdown-menu-label>
@@ -100,7 +100,7 @@
 
               <hlm-dropdown-menu-separator />
 
-              <button hlmDropdownMenuItem>
+              <button hlmDropdownMenuItem (click)="logout()">
                 <ng-icon name="lucideLogOut"></ng-icon>
                 Log out
               </button>
