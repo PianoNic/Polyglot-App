@@ -62,14 +62,77 @@ body {
   color: var(--polyglot-foreground);
 }
 
+/* Force single-column centered layout (override PatternFly v5's 2-col grid) */
+.pf-v5-c-login {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.pf-v5-c-login__container {
+  display: block !important;
+  grid-template-columns: none !important;
+  grid-template-areas: none !important;
+  width: 26rem !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+}
+
+/* Hide the realm-name brand block; the card title is enough */
+.pf-v5-c-login__header,
+#kc-header,
+#kc-header-wrapper,
+.pf-v5-c-brand {
+  display: none !important;
+}
+
 .pf-v5-c-login__main {
+  display: block !important;
   border: 1px solid var(--polyglot-border);
   border-radius: var(--polyglot-radius);
   background: var(--polyglot-card) !important;
-  padding: 2rem;
+  padding: 2rem !important;
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 5%);
-  max-width: 26rem;
-  margin: 0 auto;
+  width: 26rem !important;
+  min-width: 26rem !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  inline-size: 26rem !important;
+  grid-area: unset !important;
+  align-self: unset !important;
+}
+
+/* Reset PatternFly's hardcoded inner padding/widths so the card uses its own padding */
+.pf-v5-c-login__main-header,
+.pf-v5-c-login__main-body,
+.pf-v5-c-login__main-footer,
+.pf-v5-c-login__main-footer-band {
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+.pf-v5-c-login__main-header {
+  margin-bottom: 1.25rem;
+}
+
+.pf-v5-c-login__main-body {
+  margin-bottom: 1rem;
+}
+
+#kc-form,
+#kc-form-wrapper,
+#kc-form-login,
+.pf-v5-c-form,
+.pf-v5-c-form__group,
+.pf-v5-c-form__group-control {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.pf-v5-c-form__group {
+  margin-bottom: 1rem;
 }
 
 .pf-v5-c-login__main-header,
@@ -85,13 +148,16 @@ body {
 #kc-page-title {
   font-size: 1.5rem;
   margin-bottom: 0.5rem;
+  text-align: center;
 }
 
+.pf-v5-c-login__main-header,
 .pf-v5-c-login__main-header-desc,
 .subtitle,
 .instruction {
   color: var(--polyglot-muted-foreground);
   font-size: 0.875rem;
+  text-align: center;
 }
 
 label,
@@ -102,30 +168,71 @@ label,
   font-weight: 500;
 }
 
-.pf-v5-c-form-control,
-input[type='text'],
-input[type='email'],
-input[type='password'] {
+.pf-v5-c-form-control {
   background: var(--polyglot-background) !important;
   color: var(--polyglot-foreground) !important;
   border: 1px solid var(--polyglot-input) !important;
   border-radius: calc(var(--polyglot-radius) - 2px) !important;
   font-family: var(--polyglot-font-sans);
   font-size: 0.875rem;
-  padding: 0.5rem 0.75rem !important;
+  padding: 0 !important;
   height: 2.25rem !important;
+  display: flex;
+  align-items: center;
   box-shadow: none !important;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
+.pf-v5-c-form-control input,
+.pf-v5-c-form-control input[type='text'],
+.pf-v5-c-form-control input[type='email'],
+.pf-v5-c-form-control input[type='password'] {
+  background: transparent !important;
+  color: var(--polyglot-foreground) !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 0.5rem 0.75rem !important;
+  height: 100%;
+  width: 100%;
+  font-family: var(--polyglot-font-sans);
+  font-size: 0.875rem;
+}
+
 .pf-v5-c-form-control:focus,
-.pf-v5-c-form-control:focus-within,
-input[type='text']:focus,
-input[type='email']:focus,
-input[type='password']:focus {
+.pf-v5-c-form-control:focus-within {
   outline: none !important;
   border-color: var(--polyglot-ring) !important;
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--polyglot-ring) 25%, transparent) !important;
+}
+
+/* Kill PatternFly's blue underline animation on inputs */
+.pf-v5-c-form-control::after,
+.pf-v5-c-form-control::before {
+  display: none !important;
+  content: none !important;
+}
+
+.pf-v5-c-form-control button,
+.pf-v5-c-input-group__text button,
+button[aria-label*="password"i],
+button[aria-label*="show"i],
+button[aria-label*="hide"i] {
+  background: transparent !important;
+  border: none !important;
+  color: var(--polyglot-muted-foreground) !important;
+  padding: 0 0.5rem !important;
+  height: 100% !important;
+  width: auto !important;
+  flex-shrink: 0;
+  border-radius: 0 !important;
+}
+
+.pf-v5-c-input-group,
+.pf-v5-c-form-control-group {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .pf-v5-c-button,
@@ -143,6 +250,12 @@ button[type='submit'] {
   padding: 0 1rem;
   cursor: pointer;
   transition: opacity 150ms ease;
+  width: 100% !important;
+}
+
+.pf-v5-c-button.pf-m-block {
+  width: 100% !important;
+  display: block;
 }
 
 .pf-v5-c-button:hover,

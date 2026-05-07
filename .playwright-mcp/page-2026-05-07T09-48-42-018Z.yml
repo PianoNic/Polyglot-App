@@ -1,0 +1,936 @@
+- generic [ref=e2]:
+  - generic [ref=e5]:
+    - link "spartan" [ref=e6] [cursor=pointer]:
+      - /url: /
+      - img [ref=e8]
+      - generic [ref=e14]: spartan
+    - generic [ref=e15]:
+      - link "Docs" [ref=e16] [cursor=pointer]:
+        - /url: /documentation
+      - link "Components" [ref=e17] [cursor=pointer]:
+        - /url: /components
+      - link "Blocks" [ref=e18] [cursor=pointer]:
+        - /url: /blocks
+      - link "Colors" [ref=e19] [cursor=pointer]:
+        - /url: /colors
+      - link "Stack" [ref=e20] [cursor=pointer]:
+        - /url: /stack
+    - generic [ref=e21]:
+      - button "Search documentation... Ctrl K" [ref=e24]:
+        - generic [ref=e25]: Search documentation...
+        - generic [ref=e27]:
+          - generic: Ctrl
+          - generic: K
+      - link "Twitter" [ref=e28] [cursor=pointer]:
+        - /url: https://twitter.com/goetzrobin
+        - generic [ref=e29]: Twitter
+        - img:
+          - img
+      - link "2.5k" [ref=e30] [cursor=pointer]:
+        - /url: https://github.com/spartan-ng/spartan
+        - img:
+          - img
+        - generic [ref=e31]: 2.5k
+      - button "Set Layout" [ref=e33]:
+        - img:
+          - img
+        - generic [ref=e34]: Set Layout
+      - button "Toggle theme" [ref=e36]:
+        - img:
+          - img
+        - generic [ref=e37]: Toggle theme
+  - main [ref=e38]:
+    - generic [ref=e39]:
+      - generic [ref=e41]:
+        - link "Powered by Zerops. The dev-first cloud platform." [ref=e42] [cursor=pointer]:
+          - /url: https://zerops.io
+          - img [ref=e44]
+          - text: Powered by Zerops. The dev-first cloud platform.
+          - img:
+            - img
+        - heading "Stop fighting your component library." [level=1] [ref=e50]
+        - paragraph [ref=e51]: Accessible UI primitives for Angular - built with signals, SSR compatible, zoneless ready. Install the behavior. Copy the styles. Customize without limits.
+        - generic [ref=e52]:
+          - link "Get Started" [ref=e53] [cursor=pointer]:
+            - /url: /documentation
+          - link "View Components" [ref=e54] [cursor=pointer]:
+            - /url: /components
+          - link "Star on GitHub" [ref=e55] [cursor=pointer]:
+            - /url: https://github.com/spartan-ng/spartan
+            - img:
+              - img
+            - text: Star on GitHub
+      - generic [ref=e57]:
+        - tablist "tabs example" [ref=e59]:
+          - tab "Examples" [selected] [ref=e60] [cursor=pointer]
+          - tab "Dashboard" [ref=e61] [cursor=pointer]
+          - tab "Tasks" [ref=e62] [cursor=pointer]
+          - tab "Playground" [ref=e63] [cursor=pointer]
+          - tab "Authentication" [ref=e64] [cursor=pointer]
+        - tabpanel "Examples" [ref=e65]:
+          - generic [ref=e67]:
+            - generic [ref=e71]:
+              - group "Payment Method" [ref=e72]:
+                - generic [ref=e73]: Payment Method
+                - paragraph [ref=e74]: All transactions are secure and encrypted
+                - generic [ref=e75]:
+                  - group [ref=e76]:
+                    - generic [ref=e77]: Name on card
+                    - textbox "Name on card" [ref=e78]:
+                      - /placeholder: John Doe
+                  - generic [ref=e79]:
+                    - group [ref=e80]:
+                      - generic [ref=e81]: Card number
+                      - textbox "Card number" [ref=e82]:
+                        - /placeholder: 1234 1234 1234 1234
+                      - paragraph [ref=e83]: Enter your 16-digit card number.
+                    - group [ref=e84]:
+                      - generic [ref=e85]: CVV
+                      - textbox "CVV" [ref=e86]:
+                        - /placeholder: "123"
+                  - generic [ref=e87]:
+                    - group [ref=e88]:
+                      - generic [ref=e89]: Month
+                      - combobox "Month" [ref=e92]:
+                        - generic [ref=e93]: MM
+                        - img:
+                          - img
+                    - group [ref=e94]:
+                      - generic [ref=e95]: Year
+                      - combobox "Year" [ref=e98]:
+                        - generic [ref=e99]: YYYY
+                        - img:
+                          - img
+              - group "Billing Address" [ref=e101]:
+                - generic [ref=e102]: Billing Address
+                - paragraph [ref=e103]: The billing address associated with your payment method
+                - group [ref=e105]:
+                  - checkbox "Same as shipping address." [checked] [ref=e108]:
+                    - img [ref=e110]:
+                      - img [ref=e111]
+                  - generic [ref=e113]: Same as shipping address.
+              - group [ref=e114]:
+                - group [ref=e116]:
+                  - generic [ref=e117]: Comments
+                  - textbox "Comments" [ref=e118]
+              - group [ref=e119]:
+                - button "Submit" [ref=e120]
+                - button "Cancel" [ref=e121]
+            - generic [ref=e122]:
+              - generic [ref=e124]:
+                - generic [ref=e125]:
+                  - generic [ref=e127]:
+                    - generic [ref=e129]: A1
+                    - generic [ref=e131]: A2
+                    - generic [ref=e133]: A3
+                  - generic [ref=e134]: No Team Members
+                  - generic [ref=e135]: Invite your team to collaborate on this project.
+                - button "Invite Members" [ref=e137]:
+                  - img:
+                    - img
+                  - text: Invite Members
+              - generic [ref=e138]:
+                - generic [ref=e139]:
+                  - status "Loading" [ref=e140]:
+                    - img [ref=e141]:
+                      - img [ref=e142]
+                  - text: Loading
+                - generic [ref=e144]:
+                  - status "Loading" [ref=e145]:
+                    - img [ref=e146]:
+                      - img [ref=e147]
+                  - text: Syncing
+                - generic [ref=e149]:
+                  - status "Loading" [ref=e150]:
+                    - img [ref=e151]:
+                      - img [ref=e152]
+                  - text: Updating
+              - group [ref=e155]:
+                - group [ref=e156]:
+                  - button [ref=e157]:
+                    - img:
+                      - img
+                - group [ref=e158]:
+                  - group [ref=e159]:
+                    - textbox "Send a message" [ref=e160]
+                    - group [ref=e161]:
+                      - button [ref=e162]:
+                        - img:
+                          - img
+              - group [ref=e164]:
+                - group [ref=e166]:
+                  - generic [ref=e167]: Price Range
+                  - paragraph [ref=e168]: Set your budget range ($0 - 500).
+              - generic [ref=e174]:
+                - group [ref=e175]:
+                  - textbox "Search..." [ref=e176]
+                  - group [ref=e177]:
+                    - img [ref=e178]:
+                      - img [ref=e179]
+                  - group [ref=e182]: 12 results
+                - group [ref=e183]:
+                  - textbox "example.com" [ref=e184]
+                  - group [ref=e185]:
+                    - generic [ref=e186]: https://
+                  - group [ref=e187]:
+                    - button [ref=e188]:
+                      - img:
+                        - img
+                - group [ref=e189]:
+                  - textbox "Ask, Search or Chat..." [ref=e190]
+                  - group [ref=e191]:
+                    - button [ref=e192]:
+                      - img:
+                        - img
+                    - generic [ref=e193]: 52% used
+                    - button "Send" [ref=e194]:
+                      - img:
+                        - img
+                      - generic [ref=e195]: Send
+                - group [ref=e196]:
+                  - textbox "@spartan" [ref=e197]
+                  - group [ref=e198]:
+                    - img [ref=e200]:
+                      - img [ref=e201]
+            - generic [ref=e203]:
+              - group [ref=e205]:
+                - group [ref=e206]:
+                  - button [ref=e207]:
+                    - img:
+                      - img
+                - group [ref=e208]: https://
+                - textbox [ref=e209]
+                - group [ref=e210]:
+                  - button [ref=e211]:
+                    - img:
+                      - img
+              - generic [ref=e212]:
+                - generic [ref=e213]:
+                  - generic [ref=e214]:
+                    - generic [ref=e215]: Two-factor authentication
+                    - paragraph [ref=e216]: Verify via email or phone number.
+                  - button "Enable" [ref=e218]
+                - generic [ref=e219]:
+                  - generic [ref=e220]:
+                    - img:
+                      - img
+                  - generic [ref=e222]: Your profile has been verified.
+                  - img [ref=e224]:
+                    - img [ref=e225]
+              - generic [ref=e228]: Appearance Settings
+              - group [ref=e230]:
+                - group "Compute Environment" [ref=e232]:
+                  - generic [ref=e233]: Compute Environment
+                  - paragraph [ref=e234]: Select the compute environment for your cluster.
+                  - radiogroup [ref=e235]:
+                    - group [ref=e237]:
+                      - generic [ref=e238]:
+                        - generic [ref=e239]: Kubernetes
+                        - generic [ref=e240]: Run GPU workloads on a K8s configured cluster.
+                      - radio "Kubernetes Run GPU workloads on a K8s configured cluster." [checked] [ref=e246]
+                    - group [ref=e248]:
+                      - generic [ref=e249]:
+                        - generic [ref=e250]: Virtual Machine
+                        - generic [ref=e251]: Access a VM configured cluster to run GPU workloads.
+                      - radio "Virtual Machine Access a VM configured cluster to run GPU workloads." [ref=e257]
+                - group [ref=e259]:
+                  - generic [ref=e260]:
+                    - generic [ref=e261]: Number of GPUs
+                    - paragraph [ref=e262]: You can add more later.
+                  - group [ref=e263]:
+                    - textbox [ref=e264]: "8"
+                    - button [ref=e265]:
+                      - img:
+                        - img
+                    - button [ref=e266]:
+                      - img:
+                        - img
+                - group [ref=e268]:
+                  - generic [ref=e269]:
+                    - generic [ref=e270]: Wallpaper Tinting
+                    - paragraph [ref=e271]: Allow the wallpaper to be tinted.
+                  - switch "Wallpaper Tinting" [ref=e274]
+            - generic [ref=e275]:
+              - group [ref=e277]:
+                - group [ref=e278]:
+                  - button "Add mention" [ref=e280]:
+                    - img:
+                      - img
+                    - generic [ref=e281]: Add mention
+                - textbox "Ask, Search or make anything..." [ref=e283]
+                - group [ref=e284]:
+                  - button "Attachment" [ref=e285]:
+                    - img:
+                      - img
+                    - generic [ref=e286]: Attachment
+                  - button "Auto" [ref=e287]
+                  - button "All Sources" [ref=e288]:
+                    - img:
+                      - img
+                    - text: All Sources
+                  - button "Send" [ref=e289]:
+                    - img:
+                      - img
+                    - generic [ref=e290]: Send
+              - group [ref=e292]:
+                - group [ref=e293]:
+                  - button "Go Back" [ref=e294]:
+                    - img:
+                      - img
+                - group [ref=e295]:
+                  - button "Archive" [ref=e296]
+                  - button "Report" [ref=e297]
+                - group [ref=e298]:
+                  - button "Snooze" [ref=e299]
+                  - button [ref=e300]:
+                    - img:
+                      - img
+              - group [ref=e302]:
+                - group [ref=e304]:
+                  - checkbox "I agree to the terms and conditions" [checked] [ref=e307]:
+                    - img [ref=e309]:
+                      - img [ref=e310]
+                  - generic [ref=e312]: I agree to the terms and conditions
+              - generic [ref=e313]:
+                - group [ref=e315]:
+                  - group [ref=e316]:
+                    - button "1" [ref=e317]
+                    - button "2" [ref=e318]
+                    - button "3" [ref=e319]
+                  - group [ref=e320]:
+                    - button [ref=e321]:
+                      - img:
+                        - img
+                    - button [ref=e322]:
+                      - img:
+                        - img
+                - group [ref=e325]:
+                  - button "Copilot" [ref=e326]:
+                    - img:
+                      - img
+                    - text: Copilot
+                  - button [ref=e327]:
+                    - img:
+                      - img
+              - group "How did you hear about us?" [ref=e333]:
+                - generic [ref=e334]: How did you hear about us?
+                - paragraph [ref=e335]: Select the option that best describes how you heard about us.
+                - generic [ref=e336]:
+                  - group [ref=e338]:
+                    - checkbox "Social Media" [checked] [ref=e341]:
+                      - img [ref=e343]:
+                        - img [ref=e344]
+                    - generic [ref=e346]: Social Media
+                  - group [ref=e348]:
+                    - checkbox "Search Engine" [ref=e351]
+                    - generic [ref=e352]: Search Engine
+                  - group [ref=e354]:
+                    - checkbox "Referral" [ref=e357]
+                    - generic [ref=e358]: Referral
+                  - group [ref=e360]:
+                    - checkbox "Other" [ref=e363]
+                    - generic [ref=e364]: Other
+              - generic [ref=e366]:
+                - generic [ref=e367]:
+                  - status "Loading" [ref=e369]:
+                    - img:
+                      - img
+                  - generic [ref=e370]: Processing your request
+                  - generic [ref=e371]: Please wait while we process your request. Do not refresh the page.
+                - button "Cancel" [ref=e373]
+      - generic [ref=e374]:
+        - generic [ref=e375]:
+          - heading "Built By The 300" [level=2] [ref=e376]
+          - paragraph [ref=e377]: Ready to make a difference? Join the first 300 and help shape the future of UI development with Angular & spartan.
+        - generic [ref=e378]:
+          - generic [ref=e379]:
+            - link "goetzrobin goetzrobin" [ref=e381] [cursor=pointer]:
+              - /url: https://github.com/goetzrobin
+              - img "goetzrobin" [ref=e383]
+              - generic [ref=e384]: goetzrobin
+            - link "thatsamsonkid thatsamsonkid" [ref=e386] [cursor=pointer]:
+              - /url: https://github.com/thatsamsonkid
+              - img "thatsamsonkid" [ref=e388]
+              - generic [ref=e389]: thatsamsonkid
+            - link "elite-benni elite-benni" [ref=e391] [cursor=pointer]:
+              - /url: https://github.com/elite-benni
+              - img "elite-benni" [ref=e393]
+              - generic [ref=e394]: elite-benni
+            - link "ashley-hunter ashley-hunter" [ref=e396] [cursor=pointer]:
+              - /url: https://github.com/ashley-hunter
+              - img "ashley-hunter" [ref=e398]
+              - generic [ref=e399]: ashley-hunter
+            - link "marcjulian marcjulian" [ref=e401] [cursor=pointer]:
+              - /url: https://github.com/marcjulian
+              - img "marcjulian" [ref=e403]
+              - generic [ref=e404]: marcjulian
+            - link "MerlinMoos MerlinMoos" [ref=e406] [cursor=pointer]:
+              - /url: https://github.com/MerlinMoos
+              - img "MerlinMoos" [ref=e408]
+              - generic [ref=e409]: MerlinMoos
+            - link "zeropsio zeropsio" [ref=e411] [cursor=pointer]:
+              - /url: https://github.com/zeropsio
+              - img "zeropsio" [ref=e413]
+              - generic [ref=e414]: zeropsio
+            - link "snydertechnologies snydertechnologies" [ref=e416] [cursor=pointer]:
+              - /url: https://github.com/snydertechnologies
+              - img "snydertechnologies" [ref=e418]
+              - generic [ref=e419]: snydertechnologies
+            - link "mihajm mihajm" [ref=e421] [cursor=pointer]:
+              - /url: https://github.com/mihajm
+              - img "mihajm" [ref=e423]
+              - generic [ref=e424]: mihajm
+            - link "ajitzero ajitzero" [ref=e426] [cursor=pointer]:
+              - /url: https://github.com/ajitzero
+              - img "ajitzero" [ref=e428]
+              - generic [ref=e429]: ajitzero
+            - link "arturgawlik arturgawlik" [ref=e431] [cursor=pointer]:
+              - /url: https://github.com/arturgawlik
+              - img "arturgawlik" [ref=e433]
+              - generic [ref=e434]: arturgawlik
+            - link "deepakrudrapaul deepakrudrapaul" [ref=e436] [cursor=pointer]:
+              - /url: https://github.com/deepakrudrapaul
+              - img "deepakrudrapaul" [ref=e438]
+              - generic [ref=e439]: deepakrudrapaul
+            - link "evanfuture evanfuture" [ref=e441] [cursor=pointer]:
+              - /url: https://github.com/evanfuture
+              - img "evanfuture" [ref=e443]
+              - generic [ref=e444]: evanfuture
+            - link "AdditionAddict AdditionAddict" [ref=e446] [cursor=pointer]:
+              - /url: https://github.com/AdditionAddict
+              - img "AdditionAddict" [ref=e448]
+              - generic [ref=e449]: AdditionAddict
+            - link "Altamimi-Dev Altamimi-Dev" [ref=e451] [cursor=pointer]:
+              - /url: https://github.com/Altamimi-Dev
+              - img "Altamimi-Dev" [ref=e453]
+              - generic [ref=e454]: Altamimi-Dev
+            - link "ferat ferat" [ref=e456] [cursor=pointer]:
+              - /url: https://github.com/ferat
+              - img "ferat" [ref=e458]
+              - generic [ref=e459]: ferat
+            - link "jeremy-js-devweb jeremy-js-devweb" [ref=e461] [cursor=pointer]:
+              - /url: https://github.com/jeremy-js-devweb
+              - img "jeremy-js-devweb" [ref=e463]
+              - generic [ref=e464]: jeremy-js-devweb
+            - link "heddendorp heddendorp" [ref=e466] [cursor=pointer]:
+              - /url: https://github.com/heddendorp
+              - img "heddendorp" [ref=e468]
+              - generic [ref=e469]: heddendorp
+            - link "tutkli tutkli" [ref=e471] [cursor=pointer]:
+              - /url: https://github.com/tutkli
+              - img "tutkli" [ref=e473]
+              - generic [ref=e474]: tutkli
+            - link "Pascalmh Pascalmh" [ref=e476] [cursor=pointer]:
+              - /url: https://github.com/Pascalmh
+              - img "Pascalmh" [ref=e478]
+              - generic [ref=e479]: Pascalmh
+            - link "okkindel okkindel" [ref=e481] [cursor=pointer]:
+              - /url: https://github.com/okkindel
+              - img "okkindel" [ref=e483]
+              - generic [ref=e484]: okkindel
+            - link "oidre oidre" [ref=e486] [cursor=pointer]:
+              - /url: https://github.com/oidre
+              - img "oidre" [ref=e488]
+              - generic [ref=e489]: oidre
+            - link "nartc nartc" [ref=e491] [cursor=pointer]:
+              - /url: https://github.com/nartc
+              - img "nartc" [ref=e493]
+              - generic [ref=e494]: nartc
+            - link "santoshyadavdev santoshyadavdev" [ref=e496] [cursor=pointer]:
+              - /url: https://github.com/santoshyadavdev
+              - img "santoshyadavdev" [ref=e498]
+              - generic [ref=e499]: santoshyadavdev
+            - link "markostanimirovic markostanimirovic" [ref=e501] [cursor=pointer]:
+              - /url: https://github.com/markostanimirovic
+              - img "markostanimirovic" [ref=e503]
+              - generic [ref=e504]: markostanimirovic
+            - link "theo-matzavinos theo-matzavinos" [ref=e506] [cursor=pointer]:
+              - /url: https://github.com/theo-matzavinos
+              - img "theo-matzavinos" [ref=e508]
+              - generic [ref=e509]: theo-matzavinos
+            - link "jkuri jkuri" [ref=e511] [cursor=pointer]:
+              - /url: https://github.com/jkuri
+              - img "jkuri" [ref=e513]
+              - generic [ref=e514]: jkuri
+            - link "dongphuong0905 dongphuong0905" [ref=e516] [cursor=pointer]:
+              - /url: https://github.com/dongphuong0905
+              - img "dongphuong0905" [ref=e518]
+              - generic [ref=e519]: dongphuong0905
+            - link "DominikPieper DominikPieper" [ref=e521] [cursor=pointer]:
+              - /url: https://github.com/DominikPieper
+              - img "DominikPieper" [ref=e523]
+              - generic [ref=e524]: DominikPieper
+            - link "brandonroberts brandonroberts" [ref=e526] [cursor=pointer]:
+              - /url: https://github.com/brandonroberts
+              - img "brandonroberts" [ref=e528]
+              - generic [ref=e529]: brandonroberts
+            - link "izikd- izikd-" [ref=e531] [cursor=pointer]:
+              - /url: https://github.com/izikd-
+              - img "izikd-" [ref=e533]
+              - generic [ref=e534]: izikd-
+            - link "ryancraigmartin ryancraigmartin" [ref=e536] [cursor=pointer]:
+              - /url: https://github.com/ryancraigmartin
+              - img "ryancraigmartin" [ref=e538]
+              - generic [ref=e539]: ryancraigmartin
+            - link "gaetanBloch gaetanBloch" [ref=e541] [cursor=pointer]:
+              - /url: https://github.com/gaetanBloch
+              - img "gaetanBloch" [ref=e543]
+              - generic [ref=e544]: gaetanBloch
+            - link "gergobergo gergobergo" [ref=e546] [cursor=pointer]:
+              - /url: https://github.com/gergobergo
+              - img "gergobergo" [ref=e548]
+              - generic [ref=e549]: gergobergo
+            - link "rpacheco124 rpacheco124" [ref=e551] [cursor=pointer]:
+              - /url: https://github.com/rpacheco124
+              - img "rpacheco124" [ref=e553]
+              - generic [ref=e554]: rpacheco124
+            - link "benjaminforras benjaminforras" [ref=e556] [cursor=pointer]:
+              - /url: https://github.com/benjaminforras
+              - img "benjaminforras" [ref=e558]
+              - generic [ref=e559]: benjaminforras
+            - link "jstnjs jstnjs" [ref=e561] [cursor=pointer]:
+              - /url: https://github.com/jstnjs
+              - img "jstnjs" [ref=e563]
+              - generic [ref=e564]: jstnjs
+            - link "r3ps4J r3ps4J" [ref=e566] [cursor=pointer]:
+              - /url: https://github.com/r3ps4J
+              - img "r3ps4J" [ref=e568]
+              - generic [ref=e569]: r3ps4J
+            - link "Celtian Celtian" [ref=e571] [cursor=pointer]:
+              - /url: https://github.com/Celtian
+              - img "Celtian" [ref=e573]
+              - generic [ref=e574]: Celtian
+            - link "miljan-code miljan-code" [ref=e576] [cursor=pointer]:
+              - /url: https://github.com/miljan-code
+              - img "miljan-code" [ref=e578]
+              - generic [ref=e579]: miljan-code
+            - link "alexciesielski alexciesielski" [ref=e581] [cursor=pointer]:
+              - /url: https://github.com/alexciesielski
+              - img "alexciesielski" [ref=e583]
+              - generic [ref=e584]: alexciesielski
+            - link "ty-ler ty-ler" [ref=e586] [cursor=pointer]:
+              - /url: https://github.com/ty-ler
+              - img "ty-ler" [ref=e588]
+              - generic [ref=e589]: ty-ler
+            - link "m-risto m-risto" [ref=e591] [cursor=pointer]:
+              - /url: https://github.com/m-risto
+              - img "m-risto" [ref=e593]
+              - generic [ref=e594]: m-risto
+            - link "badsgahhl badsgahhl" [ref=e596] [cursor=pointer]:
+              - /url: https://github.com/badsgahhl
+              - img "badsgahhl" [ref=e598]
+              - generic [ref=e599]: badsgahhl
+            - link "monacodelisa monacodelisa" [ref=e601] [cursor=pointer]:
+              - /url: https://github.com/monacodelisa
+              - img "monacodelisa" [ref=e603]
+              - generic [ref=e604]: monacodelisa
+            - link "tomdev9 tomdev9" [ref=e606] [cursor=pointer]:
+              - /url: https://github.com/tomdev9
+              - img "tomdev9" [ref=e608]
+              - generic [ref=e609]: tomdev9
+            - link "ragul1697 ragul1697" [ref=e611] [cursor=pointer]:
+              - /url: https://github.com/ragul1697
+              - img "ragul1697" [ref=e613]
+              - generic [ref=e614]: ragul1697
+            - link "kkamman kkamman" [ref=e616] [cursor=pointer]:
+              - /url: https://github.com/kkamman
+              - img "kkamman" [ref=e618]
+              - generic [ref=e619]: kkamman
+            - link "i-am-the-slime i-am-the-slime" [ref=e621] [cursor=pointer]:
+              - /url: https://github.com/i-am-the-slime
+              - img "i-am-the-slime" [ref=e623]
+              - generic [ref=e624]: i-am-the-slime
+            - link "DevWedeloper DevWedeloper" [ref=e626] [cursor=pointer]:
+              - /url: https://github.com/DevWedeloper
+              - img "DevWedeloper" [ref=e628]
+              - generic [ref=e629]: DevWedeloper
+            - link "mrsofiane mrsofiane" [ref=e631] [cursor=pointer]:
+              - /url: https://github.com/mrsofiane
+              - img "mrsofiane" [ref=e633]
+              - generic [ref=e634]: mrsofiane
+            - link "mateoetchepare mateoetchepare" [ref=e636] [cursor=pointer]:
+              - /url: https://github.com/mateoetchepare
+              - img "mateoetchepare" [ref=e638]
+              - generic [ref=e639]: mateoetchepare
+            - link "DonaldMurillo DonaldMurillo" [ref=e641] [cursor=pointer]:
+              - /url: https://github.com/DonaldMurillo
+              - img "DonaldMurillo" [ref=e643]
+              - generic [ref=e644]: DonaldMurillo
+            - link "toniskobic toniskobic" [ref=e646] [cursor=pointer]:
+              - /url: https://github.com/toniskobic
+              - img "toniskobic" [ref=e648]
+              - generic [ref=e649]: toniskobic
+            - link "eneajaho eneajaho" [ref=e651] [cursor=pointer]:
+              - /url: https://github.com/eneajaho
+              - img "eneajaho" [ref=e653]
+              - generic [ref=e654]: eneajaho
+            - link "Den-dp Den-dp" [ref=e656] [cursor=pointer]:
+              - /url: https://github.com/Den-dp
+              - img "Den-dp" [ref=e658]
+              - generic [ref=e659]: Den-dp
+            - link "0xfraso 0xfraso" [ref=e661] [cursor=pointer]:
+              - /url: https://github.com/0xfraso
+              - img "0xfraso" [ref=e663]
+              - generic [ref=e664]: 0xfraso
+            - link "Muneersahel Muneersahel" [ref=e666] [cursor=pointer]:
+              - /url: https://github.com/Muneersahel
+              - img "Muneersahel" [ref=e668]
+              - generic [ref=e669]: Muneersahel
+            - link "danilolmc danilolmc" [ref=e671] [cursor=pointer]:
+              - /url: https://github.com/danilolmc
+              - img "danilolmc" [ref=e673]
+              - generic [ref=e674]: danilolmc
+            - link "tomalaforge tomalaforge" [ref=e676] [cursor=pointer]:
+              - /url: https://github.com/tomalaforge
+              - img "tomalaforge" [ref=e678]
+              - generic [ref=e679]: tomalaforge
+            - link "canserkanuren canserkanuren" [ref=e681] [cursor=pointer]:
+              - /url: https://github.com/canserkanuren
+              - img "canserkanuren" [ref=e683]
+              - generic [ref=e684]: canserkanuren
+            - link "cjosue15 cjosue15" [ref=e686] [cursor=pointer]:
+              - /url: https://github.com/cjosue15
+              - img "cjosue15" [ref=e688]
+              - generic [ref=e689]: cjosue15
+            - link "hirenchauhan2 hirenchauhan2" [ref=e691] [cursor=pointer]:
+              - /url: https://github.com/hirenchauhan2
+              - img "hirenchauhan2" [ref=e693]
+              - generic [ref=e694]: hirenchauhan2
+            - link "Roguyt Roguyt" [ref=e696] [cursor=pointer]:
+              - /url: https://github.com/Roguyt
+              - img "Roguyt" [ref=e698]
+              - generic [ref=e699]: Roguyt
+            - link "tsironis13 tsironis13" [ref=e701] [cursor=pointer]:
+              - /url: https://github.com/tsironis13
+              - img "tsironis13" [ref=e703]
+              - generic [ref=e704]: tsironis13
+            - link "0xfraso 0xfraso" [ref=e706] [cursor=pointer]:
+              - /url: https://github.com/0xfraso
+              - img "0xfraso" [ref=e708]
+              - generic [ref=e709]: 0xfraso
+            - link "guillermoecharri guillermoecharri" [ref=e711] [cursor=pointer]:
+              - /url: https://github.com/guillermoecharri
+              - img "guillermoecharri" [ref=e713]
+              - generic [ref=e714]: guillermoecharri
+            - link "ValentinFunk ValentinFunk" [ref=e716] [cursor=pointer]:
+              - /url: https://github.com/ValentinFunk
+              - img "ValentinFunk" [ref=e718]
+              - generic [ref=e719]: ValentinFunk
+            - link "Femi236 Femi236" [ref=e721] [cursor=pointer]:
+              - /url: https://github.com/Femi236
+              - img "Femi236" [ref=e723]
+              - generic [ref=e724]: Femi236
+            - link "dineshkp dineshkp" [ref=e726] [cursor=pointer]:
+              - /url: https://github.com/dineshkp
+              - img "dineshkp" [ref=e728]
+              - generic [ref=e729]: dineshkp
+            - link "robingenz robingenz" [ref=e731] [cursor=pointer]:
+              - /url: https://github.com/robingenz
+              - img "robingenz" [ref=e733]
+              - generic [ref=e734]: robingenz
+            - link "Balastrong Balastrong" [ref=e736] [cursor=pointer]:
+              - /url: https://github.com/Balastrong
+              - img "Balastrong" [ref=e738]
+              - generic [ref=e739]: Balastrong
+            - link "OlegSuncrown OlegSuncrown" [ref=e741] [cursor=pointer]:
+              - /url: https://github.com/OlegSuncrown
+              - img "OlegSuncrown" [ref=e743]
+              - generic [ref=e744]: OlegSuncrown
+            - link "stewones stewones" [ref=e746] [cursor=pointer]:
+              - /url: https://github.com/stewones
+              - img "stewones" [ref=e748]
+              - generic [ref=e749]: stewones
+            - link "shinkhouse shinkhouse" [ref=e751] [cursor=pointer]:
+              - /url: https://github.com/shinkhouse
+              - img "shinkhouse" [ref=e753]
+              - generic [ref=e754]: shinkhouse
+            - link "donaldxdonald donaldxdonald" [ref=e756] [cursor=pointer]:
+              - /url: https://github.com/donaldxdonald
+              - img "donaldxdonald" [ref=e758]
+              - generic [ref=e759]: donaldxdonald
+            - link "BenoitPE BenoitPE" [ref=e761] [cursor=pointer]:
+              - /url: https://github.com/BenoitPE
+              - img "BenoitPE" [ref=e763]
+              - generic [ref=e764]: BenoitPE
+            - link "miljan-code miljan-code" [ref=e766] [cursor=pointer]:
+              - /url: https://github.com/miljan-code
+              - img "miljan-code" [ref=e768]
+              - generic [ref=e769]: miljan-code
+            - link "Georg632 Georg632" [ref=e771] [cursor=pointer]:
+              - /url: https://github.com/Georg632
+              - img "Georg632" [ref=e773]
+              - generic [ref=e774]: Georg632
+            - link "hillin hillin" [ref=e776] [cursor=pointer]:
+              - /url: https://github.com/hillin
+              - img "hillin" [ref=e778]
+              - generic [ref=e779]: hillin
+            - link "Besbash Besbash" [ref=e781] [cursor=pointer]:
+              - /url: https://github.com/Besbash
+              - img "Besbash" [ref=e783]
+              - generic [ref=e784]: Besbash
+            - link "davidedammino davidedammino" [ref=e786] [cursor=pointer]:
+              - /url: https://github.com/davidedammino
+              - img "davidedammino" [ref=e788]
+              - generic [ref=e789]: davidedammino
+            - link "marcindz88 marcindz88" [ref=e791] [cursor=pointer]:
+              - /url: https://github.com/marcindz88
+              - img "marcindz88" [ref=e793]
+              - generic [ref=e794]: marcindz88
+            - link "thyco thyco" [ref=e796] [cursor=pointer]:
+              - /url: https://github.com/thyco
+              - img "thyco" [ref=e798]
+              - generic [ref=e799]: thyco
+            - link "hitro11 hitro11" [ref=e801] [cursor=pointer]:
+              - /url: https://github.com/hitro11
+              - img "hitro11" [ref=e803]
+              - generic [ref=e804]: hitro11
+            - link "GODrums GODrums" [ref=e806] [cursor=pointer]:
+              - /url: https://github.com/GODrums
+              - img "GODrums" [ref=e808]
+              - generic [ref=e809]: GODrums
+            - link "samsonkumawong samsonkumawong" [ref=e811] [cursor=pointer]:
+              - /url: https://github.com/samsonkumawong
+              - img "samsonkumawong" [ref=e813]
+              - generic [ref=e814]: samsonkumawong
+            - link "PR4SAN PR4SAN" [ref=e816] [cursor=pointer]:
+              - /url: https://github.com/PR4SAN
+              - img "PR4SAN" [ref=e818]
+              - generic [ref=e819]: PR4SAN
+            - link "JeevanMahesha JeevanMahesha" [ref=e821] [cursor=pointer]:
+              - /url: https://github.com/JeevanMahesha
+              - img "JeevanMahesha" [ref=e823]
+              - generic [ref=e824]: JeevanMahesha
+            - link "dlhck dlhck" [ref=e826] [cursor=pointer]:
+              - /url: https://github.com/dlhck
+              - img "dlhck" [ref=e828]
+              - generic [ref=e829]: dlhck
+            - link "tomer953 tomer953" [ref=e831] [cursor=pointer]:
+              - /url: https://github.com/tomer953
+              - img "tomer953" [ref=e833]
+              - generic [ref=e834]: tomer953
+            - link "drdreo drdreo" [ref=e836] [cursor=pointer]:
+              - /url: https://github.com/drdreo
+              - img "drdreo" [ref=e838]
+              - generic [ref=e839]: drdreo
+            - link "OlegSuncrown OlegSuncrown" [ref=e841] [cursor=pointer]:
+              - /url: https://github.com/OlegSuncrown
+              - img "OlegSuncrown" [ref=e843]
+              - generic [ref=e844]: OlegSuncrown
+            - link "tlandenberger tlandenberger" [ref=e846] [cursor=pointer]:
+              - /url: https://github.com/tlandenberger
+              - img "tlandenberger" [ref=e848]
+              - generic [ref=e849]: tlandenberger
+            - link "yackinn yackinn" [ref=e851] [cursor=pointer]:
+              - /url: https://github.com/yackinn
+              - img "yackinn" [ref=e853]
+              - generic [ref=e854]: yackinn
+            - link "OmerGronich OmerGronich" [ref=e856] [cursor=pointer]:
+              - /url: https://github.com/OmerGronich
+              - img "OmerGronich" [ref=e858]
+              - generic [ref=e859]: OmerGronich
+            - link "kubalinio kubalinio" [ref=e861] [cursor=pointer]:
+              - /url: https://github.com/kubalinio
+              - img "kubalinio" [ref=e863]
+              - generic [ref=e864]: kubalinio
+            - link "AlexHladin AlexHladin" [ref=e866] [cursor=pointer]:
+              - /url: https://github.com/AlexHladin
+              - img "AlexHladin" [ref=e868]
+              - generic [ref=e869]: AlexHladin
+            - link "CO97 CO97" [ref=e871] [cursor=pointer]:
+              - /url: https://github.com/CO97
+              - img "CO97" [ref=e873]
+              - generic [ref=e874]: CO97
+            - link "MatanShushan MatanShushan" [ref=e876] [cursor=pointer]:
+              - /url: https://github.com/MatanShushan
+              - img "MatanShushan" [ref=e878]
+              - generic [ref=e879]: MatanShushan
+            - link "maxhov maxhov" [ref=e881] [cursor=pointer]:
+              - /url: https://github.com/maxhov
+              - img "maxhov" [ref=e883]
+              - generic [ref=e884]: maxhov
+            - link "josueggh josueggh" [ref=e886] [cursor=pointer]:
+              - /url: https://github.com/josueggh
+              - img "josueggh" [ref=e888]
+              - generic [ref=e889]: josueggh
+            - link "namdien177 namdien177" [ref=e891] [cursor=pointer]:
+              - /url: https://github.com/namdien177
+              - img "namdien177" [ref=e893]
+              - generic [ref=e894]: namdien177
+            - link "zelenchuk zelenchuk" [ref=e896] [cursor=pointer]:
+              - /url: https://github.com/zelenchuk
+              - img "zelenchuk" [ref=e898]
+              - generic [ref=e899]: zelenchuk
+            - link "a-malacarne a-malacarne" [ref=e901] [cursor=pointer]:
+              - /url: https://github.com/a-malacarne
+              - img "a-malacarne" [ref=e903]
+              - generic [ref=e904]: a-malacarne
+            - link "YasinKuralay YasinKuralay" [ref=e906] [cursor=pointer]:
+              - /url: https://github.com/YasinKuralay
+              - img "YasinKuralay" [ref=e908]
+              - generic [ref=e909]: YasinKuralay
+            - link "nico13051995 nico13051995" [ref=e911] [cursor=pointer]:
+              - /url: https://github.com/nico13051995
+              - img "nico13051995" [ref=e913]
+              - generic [ref=e914]: nico13051995
+            - link "francotalarico francotalarico" [ref=e916] [cursor=pointer]:
+              - /url: https://github.com/francotalarico
+              - img "francotalarico" [ref=e918]
+              - generic [ref=e919]: francotalarico
+            - link "koenigderluegner koenigderluegner" [ref=e921] [cursor=pointer]:
+              - /url: https://github.com/koenigderluegner
+              - img "koenigderluegner" [ref=e923]
+              - generic [ref=e924]: koenigderluegner
+            - link "Turtl3e Turtl3e" [ref=e926] [cursor=pointer]:
+              - /url: https://github.com/Turtl3e
+              - img "Turtl3e" [ref=e928]
+              - generic [ref=e929]: Turtl3e
+            - link "minhnguyen120898 minhnguyen120898" [ref=e931] [cursor=pointer]:
+              - /url: https://github.com/minhnguyen120898
+              - img "minhnguyen120898" [ref=e933]
+              - generic [ref=e934]: minhnguyen120898
+            - link "liam-langstaff liam-langstaff" [ref=e936] [cursor=pointer]:
+              - /url: https://github.com/liam-langstaff
+              - img "liam-langstaff" [ref=e938]
+              - generic [ref=e939]: liam-langstaff
+            - link "dw-0 dw-0" [ref=e941] [cursor=pointer]:
+              - /url: https://github.com/dw-0
+              - img "dw-0" [ref=e943]
+              - generic [ref=e944]: dw-0
+            - link "Khumozin Khumozin" [ref=e946] [cursor=pointer]:
+              - /url: https://github.com/Khumozin
+              - img "Khumozin" [ref=e948]
+              - generic [ref=e949]: Khumozin
+            - link "abiramcodes abiramcodes" [ref=e951] [cursor=pointer]:
+              - /url: https://github.com/abiramcodes
+              - img "abiramcodes" [ref=e953]
+              - generic [ref=e954]: abiramcodes
+            - link "garygrossgarten garygrossgarten" [ref=e956] [cursor=pointer]:
+              - /url: https://github.com/garygrossgarten
+              - img "garygrossgarten" [ref=e958]
+              - generic [ref=e959]: garygrossgarten
+            - link "MatznRisto MatznRisto" [ref=e961] [cursor=pointer]:
+              - /url: https://github.com/MatznRisto
+              - img "MatznRisto" [ref=e963]
+              - generic [ref=e964]: MatznRisto
+            - link "Oussemasahbeni Oussemasahbeni" [ref=e966] [cursor=pointer]:
+              - /url: https://github.com/Oussemasahbeni
+              - img "Oussemasahbeni" [ref=e968]
+              - generic [ref=e969]: Oussemasahbeni
+            - link "benpsnyder benpsnyder" [ref=e971] [cursor=pointer]:
+              - /url: https://github.com/benpsnyder
+              - img "benpsnyder" [ref=e973]
+              - generic [ref=e974]: benpsnyder
+            - link "dhwani1806 dhwani1806" [ref=e976] [cursor=pointer]:
+              - /url: https://github.com/dhwani1806
+              - img "dhwani1806" [ref=e978]
+              - generic [ref=e979]: dhwani1806
+            - link "elite-lucas elite-lucas" [ref=e981] [cursor=pointer]:
+              - /url: https://github.com/elite-lucas
+              - img "elite-lucas" [ref=e983]
+              - generic [ref=e984]: elite-lucas
+            - link "esteecodes esteecodes" [ref=e986] [cursor=pointer]:
+              - /url: https://github.com/esteecodes
+              - img "esteecodes" [ref=e988]
+              - generic [ref=e989]: esteecodes
+            - link "felhag felhag" [ref=e991] [cursor=pointer]:
+              - /url: https://github.com/felhag
+              - img "felhag" [ref=e993]
+              - generic [ref=e994]: felhag
+            - link "notsufferbutbutter notsufferbutbutter" [ref=e996] [cursor=pointer]:
+              - /url: https://github.com/notsufferbutbutter
+              - img "notsufferbutbutter" [ref=e998]
+              - generic [ref=e999]: notsufferbutbutter
+            - link "vlrjuan vlrjuan" [ref=e1001] [cursor=pointer]:
+              - /url: https://github.com/vlrjuan
+              - img "vlrjuan" [ref=e1003]
+              - generic [ref=e1004]: vlrjuan
+            - link "Dafnik Dafnik" [ref=e1006] [cursor=pointer]:
+              - /url: https://github.com/Dafnik
+              - img "Dafnik" [ref=e1008]
+              - generic [ref=e1009]: Dafnik
+            - link "hassantayyab hassantayyab" [ref=e1011] [cursor=pointer]:
+              - /url: https://github.com/hassantayyab
+              - img "hassantayyab" [ref=e1013]
+              - generic [ref=e1014]: hassantayyab
+            - link "mathwizard mathwizard" [ref=e1016] [cursor=pointer]:
+              - /url: https://github.com/mathwizard
+              - img "mathwizard" [ref=e1018]
+              - generic [ref=e1019]: mathwizard
+            - link "RaminGe RaminGe" [ref=e1021] [cursor=pointer]:
+              - /url: https://github.com/RaminGe
+              - img "RaminGe" [ref=e1023]
+              - generic [ref=e1024]: RaminGe
+            - link "abos-gergo abos-gergo" [ref=e1026] [cursor=pointer]:
+              - /url: https://github.com/abos-gergo
+              - img "abos-gergo" [ref=e1028]
+              - generic [ref=e1029]: abos-gergo
+            - link "jpsullivan jpsullivan" [ref=e1031] [cursor=pointer]:
+              - /url: https://github.com/jpsullivan
+              - img "jpsullivan" [ref=e1033]
+              - generic [ref=e1034]: jpsullivan
+            - link "ayangabryl ayangabryl" [ref=e1036] [cursor=pointer]:
+              - /url: https://github.com/ayangabryl
+              - img "ayangabryl" [ref=e1038]
+              - generic [ref=e1039]: ayangabryl
+            - link "s-froghyar s-froghyar" [ref=e1041] [cursor=pointer]:
+              - /url: https://github.com/s-froghyar
+              - img "s-froghyar" [ref=e1043]
+              - generic [ref=e1044]: s-froghyar
+            - link "aziz-zina aziz-zina" [ref=e1046] [cursor=pointer]:
+              - /url: https://github.com/aziz-zina
+              - img "aziz-zina" [ref=e1048]
+              - generic [ref=e1049]: aziz-zina
+            - link "avihayAsus avihayAsus" [ref=e1051] [cursor=pointer]:
+              - /url: https://github.com/avihayAsus
+              - img "avihayAsus" [ref=e1053]
+              - generic [ref=e1054]: avihayAsus
+            - link "multignite multignite" [ref=e1056] [cursor=pointer]:
+              - /url: https://github.com/multignite
+              - img "multignite" [ref=e1058]
+              - generic [ref=e1059]: multignite
+            - link "sefatanam sefatanam" [ref=e1061] [cursor=pointer]:
+              - /url: https://github.com/sefatanam
+              - img "sefatanam" [ref=e1063]
+              - generic [ref=e1064]: sefatanam
+            - link "LinboLen LinboLen" [ref=e1066] [cursor=pointer]:
+              - /url: https://github.com/LinboLen
+              - img "LinboLen" [ref=e1068]
+              - generic [ref=e1069]: LinboLen
+            - link "Oneill19 Oneill19" [ref=e1071] [cursor=pointer]:
+              - /url: https://github.com/Oneill19
+              - img "Oneill19" [ref=e1073]
+              - generic [ref=e1074]: Oneill19
+            - link "homj homj" [ref=e1076] [cursor=pointer]:
+              - /url: https://github.com/homj
+              - img "homj" [ref=e1078]
+              - generic [ref=e1079]: homj
+            - img [ref=e1082]
+            - img [ref=e1090]
+            - img [ref=e1098]
+            - img [ref=e1106]
+            - img [ref=e1114]
+            - img [ref=e1122]
+            - img [ref=e1130]
+            - img [ref=e1138]
+            - img [ref=e1146]
+            - img [ref=e1154]
+            - img [ref=e1162]
+            - img [ref=e1170]
+            - img [ref=e1178]
+            - img [ref=e1186]
+            - img [ref=e1194]
+            - img [ref=e1202]
+            - img [ref=e1210]
+            - img [ref=e1218]
+            - img [ref=e1226]
+            - img [ref=e1234]
+          - paragraph [ref=e1240]: Contribute code, share insights, or sponsor on GitHub. Let's build something extraordinary together!
+          - link "Claim your spot in the 300 today!" [ref=e1241] [cursor=pointer]:
+            - /url: https://github.com/spartan-ng/spartan
+  - contentinfo [ref=e1243]:
+    - text: Development powered by
+    - link "Zerops." [ref=e1244] [cursor=pointer]:
+      - /url: https://zerops.io
+    - text: Open source and available on
+    - link "GitHub." [ref=e1245] [cursor=pointer]:
+      - /url: https://github.com/spartan-ng/spartan

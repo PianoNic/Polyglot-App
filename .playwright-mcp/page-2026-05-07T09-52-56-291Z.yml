@@ -1,0 +1,21 @@
+- main [ref=e4]:
+  - heading "Sign in to your account" [level=1] [ref=e6]
+  - generic [ref=e7]:
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - generic [ref=e13]: Username or email
+        - textbox "Username or email" [active] [ref=e15]
+      - generic [ref=e16]:
+        - generic [ref=e18]: Password
+        - generic [ref=e19]:
+          - textbox "Password" [ref=e22]
+          - button "Show password" [ref=e24] [cursor=pointer]:
+            - generic [ref=e25]: 
+        - generic [ref=e29] [cursor=pointer]:
+          - checkbox "Remember me" [ref=e30]
+          - generic [ref=e31]: Remember me
+      - button "Sign In" [ref=e34] [cursor=pointer]
+    - generic [ref=e40]:
+      - text: New user?
+      - link "Register" [ref=e41] [cursor=pointer]:
+        - /url: /realms/polyglot/login-actions/registration?client_id=polyglot&tab_id=F1fzb6aZ8Og&client_data=eyJydSI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDIwMC8iLCJydCI6ImNvZGUiLCJzdCI6InRlc3QifQ
