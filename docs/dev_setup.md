@@ -40,6 +40,8 @@ dotnet user-secrets set "Oidc:RedirectUri" "http://localhost:4200/"
 dotnet user-secrets set "Oidc:PostLogoutRedirectUri" "http://localhost:4200"
 dotnet user-secrets set "Oidc:Scope" "openid profile email roles offline_access"
 
+dotnet user-secrets set "Cors:AllowedOrigins:0" "http://localhost:4200"
+
 dotnet user-secrets set "OpenRouter:ApiKey" "<your-openrouter-api-key>"
 dotnet user-secrets set "OpenRouter:DefaultModel" "openai/gpt-5"
 ```
@@ -73,6 +75,9 @@ Paste in:
     "RedirectUri": "http://localhost:4200/",
     "PostLogoutRedirectUri": "http://localhost:4200",
     "Scope": "openid profile email roles offline_access"
+  },
+  "Cors": {
+    "AllowedOrigins": ["http://localhost:4200"]
   },
   "OpenRouter": {
     "ApiKey": "<your-openrouter-api-key>",
