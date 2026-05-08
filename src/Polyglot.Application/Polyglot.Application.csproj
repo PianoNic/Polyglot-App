@@ -9,7 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Mediator.Abstractions" Version="3.0.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.7" />
-    <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.74.0" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.5.2" />
   </ItemGroup>
 
   <ItemGroup>

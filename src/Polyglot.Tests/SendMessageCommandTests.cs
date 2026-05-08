@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.Extensions.AI;
 using NSubstitute;
 using Polyglot.Application.Command;
 using Polyglot.Domain;
 using Polyglot.Domain.Enums;
 using Polyglot.Infrastructure;
+using Polyglot.Infrastructure.Extensions;
 using Polyglot.Infrastructure.Services;
 
 namespace Polyglot.Tests;
@@ -67,13 +67,15 @@ public class SendMessageCommandTests
             .EstimateChatCreditsAsync(Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<decimal>(), Arg.Any<CancellationToken>())
             .Returns(1L);
 
-        var chatService = Substitute.For<IChatCompletionService>();
-        var handler = CreateHandler(db, user.Id, creditsService, chatService);
+        var chatClient = Substitute.For<IChatClient>();
+        var factory = Substitute.For<IChatClientFactory>();
+        factory.Create(Arg.Any<string>()).Returns(chatClient);
+        var handler = CreateHandler(db, user.Id, creditsService, factory);
 
         await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
 
-        await chatService.DidNotReceive()
-            .GetChatMessageContentsAsync(Arg.Any<ChatHistory>(), Arg.Any<PromptExecutionSettings>(), Arg.Any<Kernel>(), Arg.Any<CancellationToken>());
+        await chatClient.DidNotReceive()
+            .GetResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Test]
@@ -291,26 +293,33 @@ public class SendMessageCommandTests
         await db.SaveChangesAsync();
     }
 
-    private static IChatCompletionService FakeChatService(string reply, int promptTokens = 100, int completionTokens = 50)
+    private static IChatClientFactory FakeChatService(string reply, int promptTokens = 100, int completionTokens = 50)
     {
-        var metadata = new Dictionary<string, object?>
+        var response = new ChatResponse(new ChatMessage(ChatRole.Assistant, reply))
         {
-            ["Usage"] = new { InputTokenCount = promptTokens, OutputTokenCount = completionTokens }
+            Usage = new UsageDetails
+            {
+                InputTokenCount = promptTokens,
+                OutputTokenCount = completionTokens,
+                TotalTokenCount = promptTokens + completionTokens
+            }
         };
-        var response = new ChatMessageContent(AuthorRole.Assistant, reply, metadata: metadata);
 
-        var service = Substitute.For<IChatCompletionService>();
-        service
-            .GetChatMessageContentsAsync(Arg.Any<ChatHistory>(), Arg.Any<PromptExecutionSettings>(), Arg.Any<Kernel>(), Arg.Any<CancellationToken>())
-            .Returns(new List<ChatMessageContent> { response });
-        return service;
+        var chatClient = Substitute.For<IChatClient>();
+        chatClient
+            .GetResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions>(), Arg.Any<CancellationToken>())
+            .Returns(response);
+
+        var factory = Substitute.For<IChatClientFactory>();
+        factory.Create(Arg.Any<string>()).Returns(chatClient);
+        return factory;
     }
 
     private static SendMessageCommandHandler CreateHandler(
         PolyglotDbContext db,
         Guid userId,
         ICreditsService? creditsService = null,
-        IChatCompletionService? chatService = null)
+        IChatClientFactory? chatClientFactory = null)
     {
         var userService = Substitute.For<IUserService>();
         userService.GetCurrentUserIdAsync(Arg.Any<CancellationToken>()).Returns(userId);
@@ -318,7 +327,7 @@ public class SendMessageCommandTests
         return new SendMessageCommandHandler(
             userService,
             db,
-            chatService ?? Substitute.For<IChatCompletionService>(),
+            chatClientFactory ?? FakeChatService("ok"),
             creditsService ?? Substitute.For<ICreditsService>());
     }
 }

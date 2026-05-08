@@ -1,20 +1,20 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.Extensions.AI;
 using Polyglot.Application.Dtos;
 using Polyglot.Application.Mappers;
 using Polyglot.Application.Models;
 using Polyglot.Domain;
 using Polyglot.Domain.Enums;
 using Polyglot.Infrastructure;
+using Polyglot.Infrastructure.Extensions;
 using Polyglot.Infrastructure.Services;
 
 namespace Polyglot.Application.Command
 {
     public record SendMessageCommand(Guid? ChatId, string Message, string? Model) : ICommand<Result<SendMessageDto>>;
 
-    public class SendMessageCommandHandler(IUserService userService, PolyglotDbContext dbContext, IChatCompletionService chatCompletionService, ICreditsService creditsService) : ICommandHandler<SendMessageCommand, Result<SendMessageDto>>
+    public class SendMessageCommandHandler(IUserService userService, PolyglotDbContext dbContext, IChatClientFactory chatClientFactory, ICreditsService creditsService) : ICommandHandler<SendMessageCommand, Result<SendMessageDto>>
     {
         public async ValueTask<Result<SendMessageDto>> Handle(SendMessageCommand command, CancellationToken cancellationToken)
         {
@@ -74,27 +74,25 @@ namespace Polyglot.Application.Command
             };
             chat.Messages.Add(userMessage);
 
-            var history = new ChatHistory();
+            var messages = new List<ChatMessage>(chat.Messages.Count);
             foreach (var msg in chat.Messages.OrderBy(m => m.SequenceNumber))
             {
-                switch (msg.Role)
+                var role = msg.Role switch
                 {
-                    case MessageRole.User:
-                        history.AddUserMessage(msg.Content);
-                        break;
-                    case MessageRole.Assistant:
-                        history.AddAssistantMessage(msg.Content);
-                        break;
-                    case MessageRole.System:
-                        history.AddSystemMessage(msg.Content);
-                        break;
-                }
+                    MessageRole.User => ChatRole.User,
+                    MessageRole.Assistant => ChatRole.Assistant,
+                    MessageRole.System => ChatRole.System,
+                    MessageRole.Tool => ChatRole.Tool,
+                    _ => ChatRole.User
+                };
+                messages.Add(new ChatMessage(role, msg.Content));
             }
 
-            var promptSettings = new PromptExecutionSettings { ModelId = command.Model };
-            var response = await chatCompletionService.GetChatMessageContentAsync(history, promptSettings, cancellationToken: cancellationToken);
+            var chatClient = chatClientFactory.Create(command.Model);
+            var response = await chatClient.GetResponseAsync(messages, cancellationToken: cancellationToken);
 
-            var (promptTokens, completionTokens) = ExtractUsage(response);
+            var promptTokens = (int)(response.Usage?.InputTokenCount ?? 0);
+            var completionTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
             var actualCredits = await creditsService.CalculateChatCreditsAsync(
                 promptTokens,
                 completionTokens,
@@ -108,9 +106,9 @@ namespace Polyglot.Application.Command
             {
                 ChatId = chat.Id,
                 Role = MessageRole.Assistant,
-                Content = response.Content ?? string.Empty,
+                Content = response.Text ?? string.Empty,
                 Model = command.Model,
-                FinishReason = response.Metadata?.TryGetValue("FinishReason", out var fr) == true ? fr?.ToString() : null,
+                FinishReason = response.FinishReason?.ToString(),
                 TokenUsage = $"{promptTokens}/{completionTokens}",
                 SequenceNumber = nextSequence + 1
             };
@@ -126,29 +124,6 @@ namespace Polyglot.Application.Command
             await dbContext.SaveChangesAsync(cancellationToken);
 
             return Result<SendMessageDto>.Success(new SendMessageDto(chat.Id, userMessage.ToDto(), assistantMessage.ToDto()));
-        }
-
-        private static (int PromptTokens, int CompletionTokens) ExtractUsage(ChatMessageContent response)
-        {
-            if (response.Metadata is null) return (0, 0);
-            if (!response.Metadata.TryGetValue("Usage", out var usageObj) || usageObj is null) return (0, 0);
-
-            var type = usageObj.GetType();
-            var prompt = TryReadInt(usageObj, type, "InputTokenCount") ?? TryReadInt(usageObj, type, "PromptTokens") ?? 0;
-            var completion = TryReadInt(usageObj, type, "OutputTokenCount") ?? TryReadInt(usageObj, type, "CompletionTokens") ?? 0;
-            return (prompt, completion);
-        }
-
-        private static int? TryReadInt(object obj, Type type, string propertyName)
-        {
-            var prop = type.GetProperty(propertyName);
-            if (prop is null) return null;
-            return prop.GetValue(obj) switch
-            {
-                int i => i,
-                long l => (int)l,
-                _ => null
-            };
         }
     }
 }
