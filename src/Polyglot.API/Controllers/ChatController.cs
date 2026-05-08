@@ -1,14 +1,23 @@
+// Streaming via Server-Sent Events uses .NET 10's built-in `TypedResults.ServerSentEvents`.
+// Refs:
+//   - https://learn.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-10.0 (Server-Sent Events)
+//   - https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.ai.ichatclient.getstreamingresponseasync
+//   - https://www.milanjovanovic.tech/blog/server-sent-events-in-aspnetcore-and-dotnet-10
+using System.Net.ServerSentEvents;
+using System.Runtime.CompilerServices;
 using Mediator;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Polyglot.Application.Command;
 using Polyglot.Application.Dtos;
 using Polyglot.Application.Queries;
+using Polyglot.Application.Services;
 
 namespace Polyglot.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ChatController(IMediator mediator) : ControllerBase
+    public class ChatController(IMediator mediator, IChatStreamService chatStreamService) : ControllerBase
     {
         [HttpGet]
         [ProducesResponseType(typeof(List<ChatDto>), StatusCodes.Status200OK)]
@@ -34,15 +43,24 @@ namespace Polyglot.API.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(SendMessageDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> SendMessage([FromBody] SendMessageCommand command, CancellationToken cancellationToken)
-        {
-            var result = await mediator.Send(command, cancellationToken);
-            if (result.IsSuccess)
-                return Ok(result.Value);
+        [Produces("text/event-stream")]
+        public ServerSentEventsResult<ChatStreamPayload> SendMessage([FromBody] SendMessageCommand command, CancellationToken cancellationToken)
+            => TypedResults.ServerSentEvents(StreamMessage(command, cancellationToken));
 
-            return BadRequest(result.Error);
+        private async IAsyncEnumerable<SseItem<ChatStreamPayload>> StreamMessage(
+            SendMessageCommand command,
+            [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            await foreach (var evt in chatStreamService.StreamMessageAsync(command, cancellationToken))
+            {
+                yield return evt switch
+                {
+                    ChatStreamChunk c => new SseItem<ChatStreamPayload>(new ChatStreamPayload(Text: c.Text), "chunk"),
+                    ChatStreamDone d => new SseItem<ChatStreamPayload>(new ChatStreamPayload(Result: d.Result), "done"),
+                    ChatStreamError e => new SseItem<ChatStreamPayload>(new ChatStreamPayload(Error: e.Message), "error"),
+                    _ => throw new InvalidOperationException($"Unknown stream event: {evt.GetType().Name}"),
+                };
+            }
         }
 
         [HttpPut("{id:guid}")]
@@ -69,4 +87,6 @@ namespace Polyglot.API.Controllers
             return BadRequest(result.Error);
         }
     }
+
+    public sealed record ChatStreamPayload(string? Text = null, SendMessageDto? Result = null, string? Error = null);
 }
