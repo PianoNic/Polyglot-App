@@ -389,3 +389,6 @@ FodyWeavers.xsd
 
 # User-specific
 *.DotSettings.user
+
+# Playwright MCP debug captures
+.playwright-mcp/

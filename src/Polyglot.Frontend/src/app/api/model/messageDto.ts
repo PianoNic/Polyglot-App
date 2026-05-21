@@ -11,15 +11,15 @@ import { MessageRole } from './messageRole';
 
 
 export interface MessageDto { 
-    id?: string;
-    role?: MessageRole;
-    content?: string | null;
+    id: string;
+    role: MessageRole;
+    content: string;
     model?: string | null;
     toolCalls?: string | null;
     toolCallId?: string | null;
     finishReason?: string | null;
-    sequenceNumber?: number;
-    createdAt?: string;
+    sequenceNumber: number;
+    createdAt: string;
 }
 export namespace MessageDto {
 }

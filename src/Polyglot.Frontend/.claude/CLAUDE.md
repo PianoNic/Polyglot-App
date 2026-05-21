@@ -33,6 +33,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Do NOT use `ngClass`, use `class` bindings instead
 - Do NOT use `ngStyle`, use `style` bindings instead
 - When using external templates/styles, use paths relative to the component TS file.
+- Do NOT call APIs, load data, or trigger side effects from the constructor. Use `ngOnInit` for data loads and `ngAfterViewInit` for DOM-dependent setup. The constructor is reserved for `inject()`, signal/computed declarations, and `effect()` registration.
 
 ## State Management
 

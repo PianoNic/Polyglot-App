@@ -9,7 +9,6 @@ import { UserService } from './api/api/user.service';
   selector: 'app-root',
   imports: [RouterOutlet],
   templateUrl: './app.html',
-  styleUrl: './app.css',
 })
 export class App implements OnInit {
   private readonly oidcSecurityService = inject(OidcSecurityService);

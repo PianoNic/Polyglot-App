@@ -36,10 +36,12 @@ namespace Polyglot.Infrastructure.Services
         {
             var options = jwtOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
             var config = await options.ConfigurationManager!.GetConfigurationAsync(cancellationToken);
-            if (string.IsNullOrEmpty(config.UserInfoEndpoint)) return null;
+            if (string.IsNullOrEmpty(config.UserInfoEndpoint))
+                return null;
 
             var context = httpContextAccessor.HttpContext;
-            if (context is null) return null;
+            if (context is null)
+                return null;
 
             if (!AuthenticationHeaderValue.TryParse(context.Request.Headers.Authorization, out var auth)
                 || !string.Equals(auth.Scheme, "Bearer", StringComparison.OrdinalIgnoreCase)
@@ -50,7 +52,8 @@ namespace Polyglot.Infrastructure.Services
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.Parameter);
 
             using var response = await httpClientFactory.CreateClient().SendAsync(request, cancellationToken);
-            if (!response.IsSuccessStatusCode) return null;
+            if (!response.IsSuccessStatusCode)
+                return null;
 
             using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
             return doc.RootElement.Clone();

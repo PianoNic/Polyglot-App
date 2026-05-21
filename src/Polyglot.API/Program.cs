@@ -25,6 +25,8 @@ builder.Services.AddSwaggerGen(options =>
     var authority = builder.Configuration["Oidc:Authority"]
         ?? throw new InvalidOperationException("Oidc:Authority not configured");
 
+    options.SupportNonNullableReferenceTypes();
+
     options.AddSecurityDefinition("OpenIdConnect", new OpenApiSecurityScheme
     {
         Type = SecuritySchemeType.OpenIdConnect,

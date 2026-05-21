@@ -11,8 +11,9 @@ import { MessageDto } from './messageDto';
 
 
 export interface SendMessageDto { 
-    chatId?: string;
-    userMessage?: MessageDto;
-    assistantMessage?: MessageDto;
+    chatId: string;
+    chatTitle: string;
+    userMessage: MessageDto;
+    assistantMessage: MessageDto;
 }
 

@@ -5,7 +5,14 @@ namespace Polyglot.Application.Mappers
 {
     public static class ModelListEntryMapper
     {
-        public static ModelListEntryDto ToDto(this ModelListEntry entry) =>
-            new(entry.Id, entry.ModelId, entry.ListType);
+        public static ModelListEntryDto ToDto(this ModelListEntry entry)
+        {
+            return new ModelListEntryDto
+            {
+                Id = entry.Id,
+                ModelId = entry.ModelId,
+                ListType = entry.ListType,
+            };
+        }
     }
 }

@@ -11,10 +11,10 @@ import { MessageDto } from './messageDto';
 
 
 export interface ChatDetailDto { 
-    id?: string;
-    title?: string | null;
-    createdAt?: string;
-    updatedAt?: string;
-    messages?: Array<MessageDto> | null;
+    id: string;
+    title: string;
+    createdAt: string;
+    updatedAt: string;
+    messages: Array<MessageDto>;
 }
 

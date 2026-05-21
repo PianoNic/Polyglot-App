@@ -11,8 +11,8 @@ import { CreditAdjustmentMode } from './creditAdjustmentMode';
 
 
 export interface AdjustCreditsDto { 
-    amount?: number;
-    mode?: CreditAdjustmentMode;
+    amount: number;
+    mode: CreditAdjustmentMode;
 }
 export namespace AdjustCreditsDto {
 }

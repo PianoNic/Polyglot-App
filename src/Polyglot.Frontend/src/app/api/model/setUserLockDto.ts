@@ -10,6 +10,6 @@
 
 
 export interface SetUserLockDto { 
-    isLocked?: boolean;
+    isLocked: boolean;
 }
 

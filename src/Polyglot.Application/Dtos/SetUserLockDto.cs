@@ -1,3 +1,6 @@
 namespace Polyglot.Application.Dtos;
 
-public record SetUserLockDto(bool IsLocked);
+public record SetUserLockDto
+{
+    public required bool IsLocked { get; init; }
+}

@@ -12,10 +12,10 @@ import { ModelListMode } from './modelListMode';
 
 export interface AdminSettingsDto { 
     maxPricePerMillionTokens?: number | null;
-    activeModelListMode?: ModelListMode;
-    startingBalance?: number;
-    costMultiplier?: number;
-    creditsPerUsd?: number;
+    activeModelListMode: ModelListMode;
+    startingBalance: number;
+    costMultiplier: number;
+    creditsPerUsd: number;
 }
 export namespace AdminSettingsDto {
 }

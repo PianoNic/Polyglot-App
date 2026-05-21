@@ -18,6 +18,8 @@ namespace Polyglot.Application.Command
     {
         public async ValueTask<Result<SendMessageDto>> Handle(SendMessageCommand command, CancellationToken cancellationToken)
         {
+            Console.WriteLine($"[SendMessageHandler] Invoked: chatId={command.ChatId}, model={command.Model}, msg={command.Message?[..Math.Min(30, command.Message?.Length ?? 0)]}");
+
             if (string.IsNullOrEmpty(command.Model))
                 return Result<SendMessageDto>.Failure("Model is required");
 
@@ -73,6 +75,7 @@ namespace Polyglot.Application.Command
                 SequenceNumber = nextSequence
             };
             chat.Messages.Add(userMessage);
+            dbContext.Messages.Add(userMessage);
 
             var messages = new List<ChatMessage>(chat.Messages.Count);
             foreach (var msg in chat.Messages.OrderBy(m => m.SequenceNumber))
@@ -113,6 +116,7 @@ namespace Polyglot.Application.Command
                 SequenceNumber = nextSequence + 1
             };
             chat.Messages.Add(assistantMessage);
+            dbContext.Messages.Add(assistantMessage);
 
             if (chat.Title == "New Chat" && nextSequence == 0)
             {
@@ -123,7 +127,13 @@ namespace Polyglot.Application.Command
 
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            return Result<SendMessageDto>.Success(new SendMessageDto(chat.Id, userMessage.ToDto(), assistantMessage.ToDto()));
+            return Result<SendMessageDto>.Success(new SendMessageDto
+            {
+                ChatId = chat.Id,
+                ChatTitle = chat.Title,
+                UserMessage = userMessage.ToDto(),
+                AssistantMessage = assistantMessage.ToDto(),
+            });
         }
     }
 }

@@ -5,11 +5,27 @@ namespace Polyglot.Application.Mappers
 {
     public static class ChatMapper
     {
-        public static ChatDto ToDto(this Chat chat) =>
-            new(chat.Id, chat.Title, chat.CreatedAt, chat.UpdatedAt);
+        public static ChatDto ToDto(this Chat chat)
+        {
+            return new ChatDto
+            {
+                Id = chat.Id,
+                Title = chat.Title,
+                CreatedAt = chat.CreatedAt,
+                UpdatedAt = chat.UpdatedAt,
+            };
+        }
 
-        public static ChatDetailDto ToDetailDto(this Chat chat) =>
-            new(chat.Id, chat.Title, chat.CreatedAt, chat.UpdatedAt, 
-                chat.Messages.OrderBy(m => m.SequenceNumber).Select(m => m.ToDto()).ToList());
+        public static ChatDetailDto ToDetailDto(this Chat chat)
+        {
+            return new ChatDetailDto
+            {
+                Id = chat.Id,
+                Title = chat.Title,
+                CreatedAt = chat.CreatedAt,
+                UpdatedAt = chat.UpdatedAt,
+                Messages = chat.Messages.OrderBy(m => m.SequenceNumber).Select(m => m.ToDto()).ToList(),
+            };
+        }
     }
 }

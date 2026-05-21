@@ -34,12 +34,14 @@ namespace Polyglot.Application.Command
 
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            return Result<AdminSettingsDto>.Success(new AdminSettingsDto(
-                settings.MaxPricePerMillionTokens,
-                settings.ActiveModelListMode,
-                settings.StartingBalance,
-                settings.CostMultiplier,
-                settings.CreditsPerUsd));
+            return Result<AdminSettingsDto>.Success(new AdminSettingsDto
+            {
+                MaxPricePerMillionTokens = settings.MaxPricePerMillionTokens,
+                ActiveModelListMode = settings.ActiveModelListMode,
+                StartingBalance = settings.StartingBalance,
+                CostMultiplier = settings.CostMultiplier,
+                CreditsPerUsd = settings.CreditsPerUsd,
+            });
         }
     }
 }
