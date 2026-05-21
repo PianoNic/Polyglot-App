@@ -32,7 +32,6 @@
     "shiki": "^4.0.2",
     "marked": "^18.0.3",
     "katex": "^0.16.11",
-    "@types/katex": "^0.16.8",
     "mermaid": "^11.4.0"
   },
   "devDependencies": {
@@ -40,6 +39,7 @@
     "@angular/cli": "^21.2.9",
     "@angular/compiler-cli": "^21.2.0",
     "@openapitools/openapi-generator-cli": "^2.32.0",
+    "@types/katex": "^0.16.8",
     "@spartan-ng/cli": "^0.0.1-alpha.683",
     "@tailwindcss/postcss": "^4.1.12",
     "jsdom": "^28.0.0",

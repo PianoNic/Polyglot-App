@@ -7,7 +7,6 @@ import { NgIcon, provideIcons } from '@ng-icons/core';
 import { HlmIcon } from '@spartan-ng/helm/icon';
 import {
   lucideMessageCircle,
-  lucideSettings,
   lucideShield,
   lucideChevronsUpDown,
   lucideSparkles,
@@ -46,7 +45,6 @@ import type { ConversationRename } from '../../../libs/prompt-kit/conversation-l
   providers: [
     provideIcons({
       lucideMessageCircle,
-      lucideSettings,
       lucideShield,
       lucideChevronsUpDown,
       lucideSparkles,
@@ -75,6 +73,7 @@ export class Sidenav {
 
   constructor() {
     void this.userStore.load();
+    void this.store.loadChats();
   }
 
   protected readonly themeMode = this._theme.mode;

@@ -6,10 +6,15 @@ import { ModelService } from '../api/api/model.service';
 import type { AvailableModelDto } from '../api/model/availableModelDto';
 import type { ChatDto } from '../api/model/chatDto';
 import type { MessageDto } from '../api/model/messageDto';
+import { MessageRole } from '../api/model/messageRole';
 import type { Model } from '../../../libs/prompt-kit/model-picker/pk-model-types';
 import type { Conversation } from '../../../libs/prompt-kit/conversation-list/pk-conversation-types';
 
 const SELECTED_MODEL_KEY = 'polyglot.selectedModel';
+
+export type SendResult =
+  | { kind: 'sent'; newId: string | null }
+  | { kind: 'error'; error: string };
 
 @Injectable({ providedIn: 'root' })
 export class ChatStore {
@@ -27,8 +32,7 @@ export class ChatStore {
 
   private _chatsLoaded = false;
   private _modelsLoaded = false;
-  private _loadingChatPromise: Promise<void> | null = null;
-  private _loadedChatId: string | null = null;
+  private _inFlight: { id: string; promise: Promise<void> } | null = null;
 
   readonly conversations = computed<Conversation[]>(() =>
     this.chats().map((c) => ({
@@ -56,12 +60,24 @@ export class ChatStore {
     return id ? (this.models().find((m) => m.id === id) ?? null) : null;
   });
 
-  readonly estimatedInputTokens = computed(() =>
-    sumEstimatedTokens(this.messages(), 'User'),
-  );
-  readonly estimatedOutputTokens = computed(() =>
-    sumEstimatedTokens(this.messages(), 'Assistant'),
-  );
+  readonly activeChatTitle = computed(() => {
+    const id = this.activeChatId();
+    if (!id) return 'New chat';
+    return this.chats().find((c) => c.id === id)?.title ?? 'New chat';
+  });
+
+  private readonly _tokenSums = computed(() => {
+    let input = 0;
+    let output = 0;
+    for (const m of this.messages()) {
+      const t = Math.ceil((m.content?.length ?? 0) / 4);
+      if (m.role === MessageRole.User) input += t;
+      else if (m.role === MessageRole.Assistant) output += t;
+    }
+    return { input, output };
+  });
+  readonly estimatedInputTokens = computed(() => this._tokenSums().input);
+  readonly estimatedOutputTokens = computed(() => this._tokenSums().output);
 
   async loadChats(force = false): Promise<void> {
     if (this._chatsLoaded && !force) return;
@@ -91,37 +107,33 @@ export class ChatStore {
   }
 
   openChat(id: string): Promise<void> {
-    if (this._loadedChatId === id && this._loadingChatPromise) {
-      return this._loadingChatPromise;
-    }
-    if (this.activeChatId() === id && this._loadedChatId === id) {
-      return Promise.resolve();
-    }
-    this._loadedChatId = id;
+    if (this._inFlight?.id === id) return this._inFlight.promise;
+    if (this.activeChatId() === id && !this._inFlight) return Promise.resolve();
+
     this.activeChatId.set(id);
     this.messages.set([]);
     this.isLoadingChat.set(true);
     const promise = (async () => {
       try {
         const detail = await firstValueFrom(this._chatApi.apiChatIdGet(id));
-        if (this._loadedChatId !== id) return;
+        if (this._inFlight?.id !== id) return;
         this.messages.set(detail.messages ?? []);
-      } catch (err) {
-        if (this._loadedChatId === id) this._loadedChatId = null;
-        throw err;
       } finally {
-        if (this._loadedChatId === id) this.isLoadingChat.set(false);
+        if (this._inFlight?.id === id) {
+          this.isLoadingChat.set(false);
+          this._inFlight = null;
+        }
       }
     })();
-    this._loadingChatPromise = promise;
+    this._inFlight = { id, promise };
     return promise;
   }
 
   newChat(): void {
+    if (this.activeChatId() === null && this.messages().length === 0 && !this._inFlight) return;
     this.activeChatId.set(null);
     this.messages.set([]);
-    this._loadedChatId = null;
-    this._loadingChatPromise = null;
+    this._inFlight = null;
   }
 
   setSelectedModel(id: string): void {
@@ -131,10 +143,11 @@ export class ChatStore {
     }
   }
 
-  async sendMessage(text: string): Promise<{ ok: true; newId: string | null } | { ok: false; error: string }> {
+  async sendMessage(text: string): Promise<SendResult> {
     const trimmed = text.trim();
     const model = this.selectedModelId();
-    if (!trimmed || !model || this.isSending()) return { ok: true, newId: null };
+    if (!trimmed || !model) return { kind: 'error', error: 'Pick a model and type a message.' };
+    if (this.isSending()) return { kind: 'error', error: 'A message is already being sent.' };
 
     this.isSending.set(true);
     this.sendError.set(null);
@@ -147,25 +160,23 @@ export class ChatStore {
         }),
       );
 
-      const userMsg = response.userMessage;
-      const assistantMsg = response.assistantMessage;
       const next = [...this.messages()];
-      if (userMsg) next.push(userMsg);
-      if (assistantMsg) next.push(assistantMsg);
+      if (response.userMessage) next.push(response.userMessage);
+      if (response.assistantMessage) next.push(response.assistantMessage);
       this.messages.set(next);
 
       const newId = response.chatId ?? null;
       if (newId && newId !== this.activeChatId()) {
         this.activeChatId.set(newId);
-        await this.loadChats();
-        return { ok: true, newId };
+        await this.loadChats(true);
+        return { kind: 'sent', newId };
       }
       this.touchChat(this.activeChatId());
-      return { ok: true, newId: null };
+      return { kind: 'sent', newId: null };
     } catch (err) {
       const message = describeError(err);
       this.sendError.set(message);
-      return { ok: false, error: message };
+      return { kind: 'error', error: message };
     } finally {
       this.isSending.set(false);
     }
@@ -177,28 +188,26 @@ export class ChatStore {
 
   async renameChat(id: string, title: string): Promise<void> {
     await firstValueFrom(this._chatApi.apiChatIdPut(id, { title }));
-    this.chats.update((list) =>
-      list.map((c) => (c.id === id ? { ...c, title, updatedAt: new Date().toISOString() } : c)),
-    );
+    const list = this.chats();
+    if (!list.some((c) => c.id === id)) return;
+    const now = new Date().toISOString();
+    this.chats.set(list.map((c) => (c.id === id ? { ...c, title, updatedAt: now } : c)));
   }
 
   async deleteChat(id: string): Promise<void> {
     await firstValueFrom(this._chatApi.apiChatIdDelete(id));
     this.chats.update((list) => list.filter((c) => c.id !== id));
-    if (this._loadedChatId === id) {
-      this._loadedChatId = null;
-      this._loadingChatPromise = null;
-    }
+    if (this._inFlight?.id === id) this._inFlight = null;
     if (this.activeChatId() === id) this.newChat();
   }
 
   private touchChat(id: string | null): void {
     if (!id) return;
+    const list = this.chats();
+    if (!list.some((c) => c.id === id)) return;
     const now = new Date().toISOString();
-    this.chats.update((list) =>
-      [...list]
-        .map((c) => (c.id === id ? { ...c, updatedAt: now } : c))
-        .sort(byUpdatedDesc),
+    this.chats.set(
+      list.map((c) => (c.id === id ? { ...c, updatedAt: now } : c)).sort(byUpdatedDesc),
     );
   }
 
@@ -227,18 +236,6 @@ function describeError(err: unknown): string {
     return detail?.detail ?? detail?.title ?? err.message ?? 'Request failed.';
   }
   return err instanceof Error ? err.message : 'Something went wrong.';
-}
-
-function sumEstimatedTokens(
-  messages: readonly MessageDto[],
-  role: 'User' | 'Assistant',
-): number {
-  let total = 0;
-  for (const m of messages) {
-    if (m.role !== role) continue;
-    total += Math.ceil((m.content?.length ?? 0) / 4);
-  }
-  return total;
 }
 
 function providerFromId(id: string): string | undefined {

@@ -5,33 +5,33 @@
         <span class="sr-only">Toggle sidebar</span>
       </button>
       <hlm-popover
-      sideOffset="6"
-      [state]="modelMenuState()"
-      (stateChanged)="modelMenuState.set($event)"
-    >
-      <button
-        hlmBtn
-        variant="outline"
-        size="sm"
-        type="button"
-        hlmPopoverTrigger
-        class="justify-between gap-2"
+        sideOffset="6"
+        [state]="modelMenuState()"
+        (stateChanged)="modelMenuState.set($event)"
       >
-        <span [class.text-muted-foreground]="!store.selectedModelId()">{{ activeModelLabel() }}</span>
-        <ng-icon hlm size="xs" name="lucideChevronDown" />
-      </button>
-      <hlm-popover-content class="w-80 p-0" *hlmPopoverPortal>
-        <pk-model-list
-          [models]="store.modelOptions()"
-          [selectedId]="store.selectedModelId()"
-          (changed)="onModelChanged($event.id)"
-          searchPlaceholder="Search models..."
-        />
-      </hlm-popover-content>
-    </hlm-popover>
+        <button
+          hlmBtn
+          variant="outline"
+          size="sm"
+          type="button"
+          hlmPopoverTrigger
+          class="justify-between gap-2"
+        >
+          <span [class.text-muted-foreground]="!store.selectedModelId()">{{ activeModelLabel() }}</span>
+          <ng-icon hlm size="xs" name="lucideChevronDown" />
+        </button>
+        <hlm-popover-content class="w-80 p-0" *hlmPopoverPortal>
+          <pk-model-list
+            [models]="store.modelOptions()"
+            [selectedId]="store.selectedModelId()"
+            (changed)="onModelChanged($event.id)"
+            searchPlaceholder="Search models..."
+          />
+        </hlm-popover-content>
+      </hlm-popover>
     </div>
     <div class="flex min-w-0 items-center gap-3">
-      <span class="text-muted-foreground truncate text-xs">{{ currentTitle() }}</span>
+      <span class="text-muted-foreground truncate text-xs">{{ store.activeChatTitle() }}</span>
       @if (hasMessages() && store.activeModel(); as m) {
         <pk-cost-display
           display="session-summary"
@@ -61,23 +61,19 @@
   } @else {
     <pk-chat-container-root class="relative flex-1 px-4 py-4">
       <pk-chat-container-content class="mx-auto w-full max-w-3xl gap-6">
-        @for (m of store.messages(); track m.id ?? $index) {
-          @if (isUser(m.role)) {
-            <div class="group flex max-w-[80%] flex-col items-end gap-1 self-end">
-              <pk-message class="justify-end">
-                <pk-message-content
-                  class="bg-primary text-primary-foreground"
-                  [content]="m.content ?? ''"
-                />
-              </pk-message>
-            </div>
+        @for (m of store.messages(); track $index) {
+          @if (m.role === Role.User) {
+            <pk-message class="max-w-[80%] justify-end self-end">
+              <pk-message-content
+                class="bg-primary text-primary-foreground"
+                [content]="m.content ?? ''"
+              />
+            </pk-message>
           } @else {
-            <div class="group flex max-w-[85%] flex-col gap-1 self-start">
-              <pk-message>
-                <pk-message-avatar src="" alt="Assistant" fallback="AI" />
-                <pk-message-content [markdown]="true" [content]="m.content ?? ''" class="bg-transparent p-0" />
-              </pk-message>
-            </div>
+            <pk-message class="max-w-[85%] self-start">
+              <pk-message-avatar src="" alt="Assistant" fallback="AI" />
+              <pk-message-content [markdown]="true" [content]="m.content ?? ''" class="bg-transparent p-0" />
+            </pk-message>
           }
         }
         @if (store.isSending()) {

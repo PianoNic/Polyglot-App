@@ -78,8 +78,10 @@ export class Chat {
   private readonly _route = inject(ActivatedRoute);
   private readonly _router = inject(Router);
   protected readonly store = inject(ChatStore);
+  protected readonly Role = MessageRole;
 
   protected readonly draft = signal('');
+  private readonly _lastFailed = signal<string | null>(null);
   protected readonly suggestions = SUGGESTIONS;
   protected readonly inputLimit = 4000;
   protected readonly modelMenuState = signal<'open' | 'closed'>('closed');
@@ -91,18 +93,14 @@ export class Chat {
   });
 
   protected readonly hasMessages = computed(() => this.store.messages().length > 0);
-  protected readonly canSend = computed(
-    () =>
-      this.draft().trim().length > 0 &&
+  protected readonly canSend = computed(() => {
+    const d = this.draft();
+    return (
+      d.trim().length > 0 &&
+      d.length <= this.inputLimit &&
       !this.store.isSending() &&
-      !!this.store.selectedModelId() &&
-      this.draft().length <= this.inputLimit,
-  );
-
-  protected readonly currentTitle = computed(() => {
-    const id = this.store.activeChatId();
-    if (!id) return 'New chat';
-    return this.store.chats().find((c) => c.id === id)?.title ?? 'New chat';
+      !!this.store.selectedModelId()
+    );
   });
 
   private readonly _routeId = toSignal(
@@ -143,26 +141,22 @@ export class Chat {
     const text = this.draft();
     this.draft.set('');
     const result = await this.store.sendMessage(text);
-    if (!result.ok) {
+    if (result.kind === 'error') {
+      this._lastFailed.set(text);
       this.draft.set(text);
       return;
     }
+    this._lastFailed.set(null);
     if (result.newId) {
       void this._router.navigate(['/chat', result.newId]);
     }
   }
 
-  protected dismissError(): void {
-    this.store.clearSendError();
-  }
-
   protected async retry(): Promise<void> {
-    if (!this.draft().trim()) return;
+    const text = this._lastFailed() ?? this.draft();
+    if (!text.trim()) return;
     this.store.clearSendError();
+    this.draft.set(text);
     await this.onSubmit();
-  }
-
-  protected isUser(role: MessageRole | undefined): boolean {
-    return role === MessageRole.User;
   }
 }
