@@ -30,16 +30,6 @@
       <span class="text-muted-foreground truncate text-xs">
         {{ store.activeChatTitle() ?? 'New chat' }}
       </span>
-      @if (hasMessages() && store.activeModel(); as m) {
-        <pk-cost-display
-          display="session-summary"
-          [costPrecision]="2"
-          [inputTokens]="store.estimatedInputTokens()"
-          [outputTokens]="store.estimatedOutputTokens()"
-          [inputPricePer1M]="m.inputPricePer1M"
-          [outputPricePer1M]="m.outputPricePer1M"
-        />
-      }
     </div>
   </polyglot-content-header>
 

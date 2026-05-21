@@ -75,6 +75,7 @@ namespace Polyglot.Application.Command
                 SequenceNumber = nextSequence
             };
             chat.Messages.Add(userMessage);
+            dbContext.Messages.Add(userMessage);
 
             var history = new ChatHistory();
             foreach (var msg in chat.Messages.OrderBy(m => m.SequenceNumber))
@@ -117,6 +118,7 @@ namespace Polyglot.Application.Command
                 SequenceNumber = nextSequence + 1
             };
             chat.Messages.Add(assistantMessage);
+            dbContext.Messages.Add(assistantMessage);
 
             if (chat.Title == "New Chat" && nextSequence == 0)
             {

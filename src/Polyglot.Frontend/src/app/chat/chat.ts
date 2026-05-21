@@ -25,7 +25,6 @@ import { PkLoader } from '../../../libs/prompt-kit/loader/pk-loader';
 import { PkMessageImports } from '../../../libs/prompt-kit/message';
 import { PkModelList } from '../../../libs/prompt-kit/model-list/pk-model-list';
 import { PkPromptInputImports } from '../../../libs/prompt-kit/prompt-input';
-import { PkCostDisplay } from '../../../libs/prompt-kit/cost-display/pk-cost-display';
 import { PkScrollButton } from '../../../libs/prompt-kit/scroll-button/pk-scroll-button';
 import { PkSystemMessage } from '../../../libs/prompt-kit/system-message/pk-system-message';
 import { PkTokenCounter } from '../../../libs/prompt-kit/token-counter/pk-token-counter';
@@ -50,7 +49,6 @@ const SUGGESTIONS: ChatEmptySuggestion[] = [
     PkChatEmpty,
     PkLoader,
     PkMessageImports,
-    PkCostDisplay,
     PkModelList,
     PkPromptInputImports,
     HlmPopoverImports,
@@ -121,6 +119,7 @@ export class Chat implements OnInit {
         }
       });
     });
+
   }
 
   ngOnInit(): void {

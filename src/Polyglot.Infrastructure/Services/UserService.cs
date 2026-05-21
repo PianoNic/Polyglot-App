@@ -52,7 +52,17 @@ namespace Polyglot.Infrastructure.Services
                 };
 
                 dbContext.Users.Add(user);
-                await dbContext.SaveChangesAsync(cancellationToken);
+
+                try
+                {
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                }
+                catch (DbUpdateException)
+                {
+                    dbContext.Entry(user).State = EntityState.Detached;
+                    if (!await dbContext.Users.AnyAsync(u => u.ExternalId == oidcUser.ExternalId, cancellationToken))
+                        throw;
+                }
                 return;
             }
 
