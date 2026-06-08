@@ -139,7 +139,6 @@ export class Chat implements OnInit {
   }
 
   protected async onSubmit(): Promise<void> {
-    console.log('[Chat] onSubmit called at', performance.now().toFixed(0), 'ms');
     if (!this.canSend()) return;
     const text = this.draft();
     this.draft.set('');
