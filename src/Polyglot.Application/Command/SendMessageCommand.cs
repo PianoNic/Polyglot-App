@@ -18,8 +18,6 @@ namespace Polyglot.Application.Command
     {
         public async ValueTask<Result<SendMessageDto>> Handle(SendMessageCommand command, CancellationToken cancellationToken)
         {
-            Console.WriteLine($"[SendMessageHandler] Invoked: chatId={command.ChatId}, model={command.Model}, msg={command.Message?[..Math.Min(30, command.Message?.Length ?? 0)]}");
-
             if (string.IsNullOrEmpty(command.Model))
                 return Result<SendMessageDto>.Failure("Model is required");
 
