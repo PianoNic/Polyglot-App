@@ -12,15 +12,12 @@ using Polyglot.Infrastructure.Services;
 
 namespace Polyglot.Application.Command
 {
-    public record SendMessageCommand(Guid? ChatId, string Message, string? Model) : ICommand<Result<SendMessageDto>>;
+    public record SendMessageCommand(Guid? ChatId, string Message, string Model) : ICommand<Result<SendMessageDto>>;
 
     public class SendMessageCommandHandler(IUserService userService, PolyglotDbContext dbContext, IChatClientFactory chatClientFactory, ICreditsService creditsService) : ICommandHandler<SendMessageCommand, Result<SendMessageDto>>
     {
         public async ValueTask<Result<SendMessageDto>> Handle(SendMessageCommand command, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(command.Model))
-                return Result<SendMessageDto>.Failure("Model is required");
-
             var userId = await userService.GetCurrentUserIdAsync(cancellationToken);
             var user = await dbContext.Users.SingleAsync(u => u.Id == userId, cancellationToken);
 
