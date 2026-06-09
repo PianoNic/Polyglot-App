@@ -9,6 +9,7 @@ namespace Polyglot.Infrastructure
         public DbSet<User> Users => Set<User>();
         public DbSet<Chat> Chats => Set<Chat>();
         public DbSet<Message> Messages => Set<Message>();
+        public DbSet<Attachment> Attachments => Set<Attachment>();
         public DbSet<ModelListEntry> ModelListEntries => Set<ModelListEntry>();
         public DbSet<AdminSettings> AdminSettings => Set<AdminSettings>();
         public DbSet<Model> Models => Set<Model>();

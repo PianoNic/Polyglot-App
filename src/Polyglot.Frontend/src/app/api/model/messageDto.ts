@@ -7,6 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { AttachmentDto } from './attachmentDto';
 import { MessageRole } from './messageRole';
 
 
@@ -20,6 +21,7 @@ export interface MessageDto {
     finishReason?: string | null;
     sequenceNumber: number;
     createdAt: string;
+    attachments: Array<AttachmentDto>;
 }
 export namespace MessageDto {
 }

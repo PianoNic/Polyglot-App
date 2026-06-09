@@ -5,6 +5,7 @@ api.module.ts
 api/admin.service.ts
 api/api.ts
 api/app.service.ts
+api/attachment.service.ts
 api/chat.service.ts
 api/model.service.ts
 api/user.service.ts
@@ -16,6 +17,7 @@ model/addModelListEntryCommand.ts
 model/adjustCreditsDto.ts
 model/adminSettingsDto.ts
 model/appDto.ts
+model/attachmentDto.ts
 model/availableModelDto.ts
 model/chatDetailDto.ts
 model/chatDto.ts

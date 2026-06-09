@@ -9,6 +9,7 @@ namespace Polyglot.Infrastructure.BackgroundServices
         {
             services.AddHostedService<ModelSyncService>();
             services.AddHostedService<PostgresBackupService>();
+            services.AddHostedService<AttachmentCleanupService>();
             return services;
         }
     }

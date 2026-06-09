@@ -13,4 +13,5 @@ public record MessageDto
     public string? FinishReason { get; init; }
     public required int SequenceNumber { get; init; }
     public required DateTime CreatedAt { get; init; }
+    public required List<AttachmentDto> Attachments { get; init; }
 }

@@ -9,10 +9,10 @@
  */
 
 
-export interface SendMessageCommand { 
-    chatId?: string | null;
-    message?: string;
-    model?: string;
-    attachmentIds?: Array<string> | null;
+export interface AttachmentDto { 
+    id: string;
+    fileName: string;
+    mediaType: string;
+    sizeBytes: number;
 }
 

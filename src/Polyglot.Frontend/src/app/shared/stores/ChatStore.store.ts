@@ -15,8 +15,10 @@ import {
   withMethods,
   withState,
 } from '@ngrx/signals';
+import { AttachmentService } from '../../api/api/attachment.service';
 import { ChatService } from '../../api/api/chat.service';
 import { ModelService } from '../../api/api/model.service';
+import type { AttachmentDto } from '../../api/model/attachmentDto';
 import type { AvailableModelDto } from '../../api/model/availableModelDto';
 import type { ChatStreamPayload } from '../../api/model/chatStreamPayload';
 import { ChatStreamPayloadType } from '../../api/model/chatStreamPayloadType';
@@ -41,6 +43,7 @@ type ChatStoreState = {
   isSending: boolean;
   streamingText: string;
   streamDone: boolean;
+  pendingAttachments: AttachmentDto[];
   isLoadingChat: boolean;
   sendError: string | null;
   chatsLoaded: boolean;
@@ -57,6 +60,7 @@ export const initialChatStore: ChatStoreState = {
   isSending: false,
   streamingText: '',
   streamDone: false,
+  pendingAttachments: [],
   isLoadingChat: false,
   sendError: null,
   chatsLoaded: false,
@@ -89,6 +93,7 @@ export const ChatStore = signalStore(
   withMethods((store) => {
     const chatApi = inject(ChatService);
     const modelApi = inject(ModelService);
+    const attachmentApi = inject(AttachmentService);
     let inFlight: { id: string; promise: Promise<void> } | null = null;
     let pendingStream: { response: SendMessageDto; optimisticId: string } | null = null;
 
@@ -181,24 +186,36 @@ export const ChatStore = signalStore(
       if (store.isSending() || store.streamingText())
         return { kind: 'error', error: 'A message is already being sent.' };
 
+      const attachments = store.pendingAttachments();
       const optimistic: MessageDto = {
         id: `temp-${crypto.randomUUID()}`,
         role: MessageRole.User,
         content: trimmed,
         sequenceNumber: store.messages().length,
         createdAt: new Date().toISOString(),
+        attachments,
       };
       patchState(store, (state) => ({
         isSending: true,
         sendError: null,
         streamingText: '',
         streamDone: false,
+        pendingAttachments: [],
         messages: [...state.messages, optimistic],
       }));
 
       try {
         const response = await streamSend(
-          chatApi.apiChatPost({ chatId: store.activeChatId(), message: trimmed, model }, 'events', true),
+          chatApi.apiChatPost(
+            {
+              chatId: store.activeChatId(),
+              message: trimmed,
+              model,
+              attachmentIds: attachments.map((a) => a.id),
+            },
+            'events',
+            true,
+          ),
           (token) => patchState(store, (state) => ({ streamingText: state.streamingText + token })),
         );
 
@@ -227,6 +244,7 @@ export const ChatStore = signalStore(
           isSending: false,
           streamingText: '',
           streamDone: false,
+          pendingAttachments: attachments,
         });
         return { kind: 'error', error: message };
       }
@@ -250,6 +268,21 @@ export const ChatStore = signalStore(
 
     function clearSendError(): void {
       patchState(store, { sendError: null });
+    }
+
+    async function uploadAttachment(file: File): Promise<void> {
+      try {
+        const dto = await firstValueFrom(attachmentApi.apiAttachmentPost(file));
+        patchState(store, (state) => ({ pendingAttachments: [...state.pendingAttachments, dto] }));
+      } catch (err) {
+        patchState(store, { sendError: describeError(err) });
+      }
+    }
+
+    function removeAttachment(id: string): void {
+      patchState(store, (state) => ({
+        pendingAttachments: state.pendingAttachments.filter((a) => a.id !== id),
+      }));
     }
 
     async function renameChat(id: string, title: string): Promise<void> {
@@ -282,6 +315,8 @@ export const ChatStore = signalStore(
       sendMessage,
       commitStream,
       clearSendError,
+      uploadAttachment,
+      removeAttachment,
       renameChat,
       deleteChat,
     };

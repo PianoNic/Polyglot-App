@@ -2,6 +2,7 @@ export * from './addModelListEntryCommand';
 export * from './adjustCreditsDto';
 export * from './adminSettingsDto';
 export * from './appDto';
+export * from './attachmentDto';
 export * from './availableModelDto';
 export * from './chatDetailDto';
 export * from './chatDto';

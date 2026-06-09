@@ -16,7 +16,7 @@ namespace Polyglot.Application.Mappers
             };
         }
 
-        public static ChatDetailDto ToDetailDto(this Chat chat)
+        public static ChatDetailDto ToDetailDto(this Chat chat, ILookup<Guid, AttachmentDto> attachmentsByMessage)
         {
             return new ChatDetailDto
             {
@@ -24,7 +24,7 @@ namespace Polyglot.Application.Mappers
                 Title = chat.Title,
                 CreatedAt = chat.CreatedAt,
                 UpdatedAt = chat.UpdatedAt,
-                Messages = chat.Messages.OrderBy(m => m.SequenceNumber).Select(m => m.ToDto()).ToList(),
+                Messages = chat.Messages.OrderBy(m => m.SequenceNumber).Select(m => m.ToDto(attachmentsByMessage[m.Id].ToList())).ToList(),
             };
         }
     }

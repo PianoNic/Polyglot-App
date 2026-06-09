@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, OnInit, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
@@ -17,7 +19,11 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmIcon } from '@spartan-ng/helm/icon';
 import { HlmPopoverImports } from '@spartan-ng/helm/popover';
 import { MessageRole } from '../api/model/messageRole';
+import type { AttachmentDto } from '../api/model/attachmentDto';
+import { BASE_PATH } from '../api/variables';
 import { ContentHeader } from '../shared/components/content-header/content-header';
+import { PkAttachmentChip } from '../../../libs/prompt-kit/attachment-preview';
+import type { Attachment } from '../../../libs/prompt-kit/attachment-preview';
 import { PkChatContainerImports } from '../../../libs/prompt-kit/chat-container';
 import { PkChatEmpty } from '../../../libs/prompt-kit/chat-empty/pk-chat-empty';
 import type { ChatEmptySuggestion } from '../../../libs/prompt-kit/chat-empty/pk-chat-empty';
@@ -51,6 +57,7 @@ const SUGGESTIONS: ChatEmptySuggestion[] = [
     PkLoader,
     PkMessageImports,
     PkModelList,
+    PkAttachmentChip,
     PkPromptInputImports,
     PkResponseStream,
     HlmPopoverImports,
@@ -76,8 +83,18 @@ const SUGGESTIONS: ChatEmptySuggestion[] = [
 export class Chat implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly http = inject(HttpClient);
+  private readonly basePath = inject(BASE_PATH);
   protected readonly store = inject(ChatStore);
   protected readonly Role = MessageRole;
+
+  private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
+
+  protected readonly acceptTypes = computed(() => {
+    const documents = '.pdf,.txt,.md,.csv';
+    const model = this.store.activeModel();
+    return model?.inputModalities?.includes('image') ? `image/*,${documents}` : documents;
+  });
 
   protected readonly draft = signal('');
   private readonly lastFailed = signal<string | null>(null);
@@ -164,5 +181,34 @@ export class Chat implements OnInit {
     this.store.clearSendError();
     this.draft.set(text);
     await this.onSubmit();
+  }
+
+  protected openFilePicker(): void {
+    this.fileInput()?.nativeElement.click();
+  }
+
+  protected async onFilesSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    for (const file of Array.from(input.files ?? [])) {
+      await this.store.uploadAttachment(file);
+    }
+    input.value = '';
+  }
+
+  protected asChip(a: AttachmentDto): Attachment {
+    return {
+      id: a.id,
+      name: a.fileName,
+      type: a.mediaType.startsWith('image/') ? 'image' : 'file',
+      size: a.sizeBytes,
+      mimeType: a.mediaType,
+    };
+  }
+
+  protected async openAttachment(id: string): Promise<void> {
+    const blob = await firstValueFrom(
+      this.http.get(`${this.basePath}/api/Attachment/${id}`, { responseType: 'blob' }),
+    );
+    window.open(URL.createObjectURL(blob), '_blank');
   }
 }
