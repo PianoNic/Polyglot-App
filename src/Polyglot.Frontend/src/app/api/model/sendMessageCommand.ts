@@ -12,6 +12,6 @@
 export interface SendMessageCommand { 
     chatId?: string | null;
     message?: string;
-    model?: string | null;
+    model?: string;
 }
 

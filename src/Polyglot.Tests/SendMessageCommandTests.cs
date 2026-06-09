@@ -13,7 +13,7 @@ namespace Polyglot.Tests;
 public class SendMessageCommandTests
 {
     [Test]
-    public async Task Handle_NotEnoughCredits_ReturnsFailure()
+    public async Task Handle_NotEnoughCredits_EmitsError()
     {
         // Arrange: user has 5 credits, but sending costs ~100
         var db = CreateDb();
@@ -28,11 +28,12 @@ public class SendMessageCommandTests
         var handler = CreateHandler(db, user.Id, creditsService);
 
         // Act
-        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
 
         // Assert
-        await Assert.That(result.IsFailure).IsTrue();
-        await Assert.That(result.Error!).Contains("Insufficient credits");
+        await Assert.That(events.Count).IsEqualTo(1);
+        await Assert.That(events[0]).IsTypeOf<ChatStreamError>();
+        await Assert.That(((ChatStreamError)events[0]).Message).Contains("Insufficient credits");
     }
 
     [Test]
@@ -49,10 +50,11 @@ public class SendMessageCommandTests
 
         var handler = CreateHandler(db, user.Id, creditsService);
 
-        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
 
-        await Assert.That(result.Error!).Contains("200");
-        await Assert.That(result.Error!).Contains("50");
+        var error = ((ChatStreamError)events[0]).Message;
+        await Assert.That(error).Contains("200");
+        await Assert.That(error).Contains("50");
     }
 
     [Test]
@@ -72,10 +74,10 @@ public class SendMessageCommandTests
         factory.Create(Arg.Any<string>()).Returns(chatClient);
         var handler = CreateHandler(db, user.Id, creditsService, factory);
 
-        await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+        await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
 
-        await chatClient.DidNotReceive()
-            .GetResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions>(), Arg.Any<CancellationToken>());
+        chatClient.DidNotReceive()
+            .GetStreamingResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Test]
@@ -93,11 +95,39 @@ public class SendMessageCommandTests
             .CalculateChatCreditsAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<decimal>(), Arg.Any<CancellationToken>())
             .Returns(80L);
 
-        var handler = CreateHandler(db, user.Id, creditsService, FakeChatService("Hi!"));
+        var handler = CreateHandler(db, user.Id, creditsService, FakeStreamingClient("Hi!"));
 
-        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
 
-        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(events[^1]).IsTypeOf<ChatStreamDone>();
+    }
+
+    [Test]
+    public async Task Handle_Success_EmitsChunksThenDone()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db);
+
+        var creditsService = Substitute.For<ICreditsService>();
+        creditsService
+            .EstimateChatCreditsAsync(Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<decimal>(), Arg.Any<CancellationToken>())
+            .Returns(100L);
+        creditsService
+            .CalculateChatCreditsAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<decimal>(), Arg.Any<CancellationToken>())
+            .Returns(50L);
+
+        var handler = CreateHandler(db, user.Id, creditsService, FakeStreamingClient("Hello", " world"));
+
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hi", "gpt-4"), CancellationToken.None));
+
+        await Assert.That(events.Count).IsEqualTo(3);
+        await Assert.That(events[0]).IsTypeOf<ChatStreamChunk>();
+        await Assert.That(((ChatStreamChunk)events[0]).Text).IsEqualTo("Hello");
+        await Assert.That(events[1]).IsTypeOf<ChatStreamChunk>();
+        await Assert.That(((ChatStreamChunk)events[1]).Text).IsEqualTo(" world");
+        await Assert.That(events[2]).IsTypeOf<ChatStreamDone>();
+        await Assert.That(((ChatStreamDone)events[2]).Result.AssistantMessage.Content).IsEqualTo("Hello world");
     }
 
     [Test]
@@ -117,10 +147,10 @@ public class SendMessageCommandTests
             .CalculateChatCreditsAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<decimal>(), Arg.Any<CancellationToken>())
             .Returns(120L);
 
-        var handler = CreateHandler(db, user.Id, creditsService, FakeChatService("Response"));
+        var handler = CreateHandler(db, user.Id, creditsService, FakeStreamingClient("Response"));
 
         // Act
-        await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+        await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
 
         // Assert: 1000 - 120 = 880 (not 1000 - 500)
         var checkDb = CreateDb(dbName);
@@ -143,10 +173,10 @@ public class SendMessageCommandTests
             .CalculateChatCreditsAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<decimal>(), Arg.Any<CancellationToken>())
             .Returns(100L);
 
-        // AI response reports 250 prompt tokens, 75 completion tokens
-        var handler = CreateHandler(db, user.Id, creditsService, FakeChatService("Hi", promptTokens: 250, completionTokens: 75));
+        // AI stream reports 250 prompt tokens, 75 completion tokens
+        var handler = CreateHandler(db, user.Id, creditsService, FakeStreamingClient(promptTokens: 250, completionTokens: 75, chunks: ["Hi"]));
 
-        await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+        await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
 
         // Should calculate cost with actual tokens (250, 75) and model prices (3, 15)
         await creditsService.Received(1).CalculateChatCreditsAsync(
@@ -168,9 +198,9 @@ public class SendMessageCommandTests
             .CalculateChatCreditsAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<decimal>(), Arg.Any<CancellationToken>())
             .Returns(50L);
 
-        var handler = CreateHandler(db, user.Id, creditsService, FakeChatService("Hi"));
+        var handler = CreateHandler(db, user.Id, creditsService, FakeStreamingClient("Hi"));
 
-        await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+        await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
 
         // Model has PromptPrice=3, CompletionPrice=15
         await creditsService.Received(1).EstimateChatCreditsAsync(
@@ -192,15 +222,15 @@ public class SendMessageCommandTests
             .CalculateChatCreditsAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<decimal>(), Arg.Any<CancellationToken>())
             .Returns(0L);
 
-        var handler = CreateHandler(db, user.Id, creditsService, FakeChatService("Free response"));
+        var handler = CreateHandler(db, user.Id, creditsService, FakeStreamingClient("Free response"));
 
-        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
 
-        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(events[^1]).IsTypeOf<ChatStreamDone>();
     }
 
     [Test]
-    public async Task Handle_LockedUser_Fails()
+    public async Task Handle_LockedUser_EmitsError()
     {
         var db = CreateDb();
         var user = await SeedUserWithCredits(db, credits: 10_000);
@@ -209,42 +239,45 @@ public class SendMessageCommandTests
         await SeedModel(db);
         var handler = CreateHandler(db, user.Id);
 
-        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
 
-        await Assert.That(result.IsFailure).IsTrue();
-        await Assert.That(result.Error!).Contains("locked");
+        await Assert.That(events.Count).IsEqualTo(1);
+        await Assert.That(events[0]).IsTypeOf<ChatStreamError>();
+        await Assert.That(((ChatStreamError)events[0]).Message).Contains("locked");
     }
 
     [Test]
-    public async Task Handle_UnknownModel_Fails()
+    public async Task Handle_UnknownModel_EmitsError()
     {
         var db = CreateDb();
         var user = await SeedUserWithCredits(db, credits: 10_000);
         await SeedModel(db);
         var handler = CreateHandler(db, user.Id);
 
-        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "nonexistent"), CancellationToken.None);
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "nonexistent"), CancellationToken.None));
 
-        await Assert.That(result.IsFailure).IsTrue();
-        await Assert.That(result.Error!).Contains("not found");
+        await Assert.That(events.Count).IsEqualTo(1);
+        await Assert.That(events[0]).IsTypeOf<ChatStreamError>();
+        await Assert.That(((ChatStreamError)events[0]).Message).Contains("not found");
     }
 
     [Test]
-    public async Task Handle_NonexistentChat_Fails()
+    public async Task Handle_NonexistentChat_EmitsError()
     {
         var db = CreateDb();
         var user = await SeedUserWithCredits(db, credits: 10_000);
         await SeedModel(db);
         var handler = CreateHandler(db, user.Id);
 
-        var result = await handler.Handle(new SendMessageCommand(Guid.NewGuid(), "Hello", "gpt-4"), CancellationToken.None);
+        var events = await Collect(handler.Handle(new SendMessageCommand(Guid.NewGuid(), "Hello", "gpt-4"), CancellationToken.None));
 
-        await Assert.That(result.IsFailure).IsTrue();
-        await Assert.That(result.Error!).Contains("Chat not found");
+        await Assert.That(events.Count).IsEqualTo(1);
+        await Assert.That(events[0]).IsTypeOf<ChatStreamError>();
+        await Assert.That(((ChatStreamError)events[0]).Message).Contains("Chat not found");
     }
 
     [Test]
-    public async Task Handle_WhitelistMode_ModelNotWhitelisted_Fails()
+    public async Task Handle_WhitelistMode_ModelNotWhitelisted_EmitsError()
     {
         var db = CreateDb();
         var user = await SeedUserWithCredits(db, credits: 10_000);
@@ -254,10 +287,11 @@ public class SendMessageCommandTests
         await db.SaveChangesAsync();
         var handler = CreateHandler(db, user.Id);
 
-        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
 
-        await Assert.That(result.IsFailure).IsTrue();
-        await Assert.That(result.Error!).Contains("not available");
+        await Assert.That(events.Count).IsEqualTo(1);
+        await Assert.That(events[0]).IsTypeOf<ChatStreamError>();
+        await Assert.That(((ChatStreamError)events[0]).Message).Contains("not available");
     }
 
     [Test]
@@ -270,15 +304,15 @@ public class SendMessageCommandTests
         settings.ActiveModelListMode = ModelListMode.Whitelist;
         db.ModelListEntries.Add(new ModelListEntry { ModelId = "gpt-4", ListType = ModelListType.Whitelist });
         await db.SaveChangesAsync();
-        var handler = CreateHandler(db, user.Id, chatClientFactory: FakeChatService("Hi"));
+        var handler = CreateHandler(db, user.Id, chatClientFactory: FakeStreamingClient("Hi"));
 
-        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
 
-        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(events[^1]).IsTypeOf<ChatStreamDone>();
     }
 
     [Test]
-    public async Task Handle_BlacklistMode_ModelBlacklisted_Fails()
+    public async Task Handle_BlacklistMode_ModelBlacklisted_EmitsError()
     {
         var db = CreateDb();
         var user = await SeedUserWithCredits(db, credits: 10_000);
@@ -289,14 +323,15 @@ public class SendMessageCommandTests
         await db.SaveChangesAsync();
         var handler = CreateHandler(db, user.Id);
 
-        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
 
-        await Assert.That(result.IsFailure).IsTrue();
-        await Assert.That(result.Error!).Contains("not available");
+        await Assert.That(events.Count).IsEqualTo(1);
+        await Assert.That(events[0]).IsTypeOf<ChatStreamError>();
+        await Assert.That(((ChatStreamError)events[0]).Message).Contains("not available");
     }
 
     [Test]
-    public async Task Handle_PriceCapExceeded_Fails()
+    public async Task Handle_PriceCapExceeded_EmitsError()
     {
         var db = CreateDb();
         var user = await SeedUserWithCredits(db, credits: 10_000);
@@ -307,10 +342,11 @@ public class SendMessageCommandTests
         var handler = CreateHandler(db, user.Id);
 
         // Model has CompletionPricePerMillion = 15 > cap of 10
-        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
 
-        await Assert.That(result.IsFailure).IsTrue();
-        await Assert.That(result.Error!).Contains("not available");
+        await Assert.That(events.Count).IsEqualTo(1);
+        await Assert.That(events[0]).IsTypeOf<ChatStreamError>();
+        await Assert.That(((ChatStreamError)events[0]).Message).Contains("not available");
     }
 
     [Test]
@@ -322,14 +358,53 @@ public class SendMessageCommandTests
         var settings = await db.AdminSettings.SingleAsync();
         settings.MaxPricePerMillionTokens = 15m;
         await db.SaveChangesAsync();
-        var handler = CreateHandler(db, user.Id, chatClientFactory: FakeChatService("Hi"));
+        var handler = CreateHandler(db, user.Id, chatClientFactory: FakeStreamingClient("Hi"));
 
-        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
 
-        await Assert.That(result.IsSuccess).IsTrue();
+        await Assert.That(events[^1]).IsTypeOf<ChatStreamDone>();
+    }
+
+    [Test]
+    public async Task Handle_ProviderFailsMidStream_EmitsErrorNotException()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db);
+
+        async IAsyncEnumerable<ChatResponseUpdate> FailingUpdates()
+        {
+            await Task.Yield();
+            yield return new ChatResponseUpdate(ChatRole.Assistant, "partial");
+            throw new InvalidOperationException("upstream exploded");
+        }
+
+        var chatClient = Substitute.For<IChatClient>();
+        chatClient
+            .GetStreamingResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions>(), Arg.Any<CancellationToken>())
+            .Returns(FailingUpdates());
+        var factory = Substitute.For<IChatClientFactory>();
+        factory.Create(Arg.Any<string>()).Returns(chatClient);
+        var handler = CreateHandler(db, user.Id, chatClientFactory: factory);
+
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
+
+        await Assert.That(events[0]).IsTypeOf<ChatStreamChunk>();
+        await Assert.That(events[^1]).IsTypeOf<ChatStreamError>();
+        await Assert.That(((ChatStreamError)events[^1]).Message).Contains("upstream exploded");
     }
 
     // --- Simple factory methods (no logic, just reduce repeated boilerplate) ---
+
+    private static async Task<List<ChatStreamEvent>> Collect(IAsyncEnumerable<ChatStreamEvent> stream)
+    {
+        var list = new List<ChatStreamEvent>();
+        await foreach (var e in stream)
+        {
+            list.Add(e);
+        }
+        return list;
+    }
 
     private static PolyglotDbContext CreateDb(string? name = null)
     {
@@ -366,22 +441,40 @@ public class SendMessageCommandTests
         await db.SaveChangesAsync();
     }
 
-    private static IChatClientFactory FakeChatService(string reply, int promptTokens = 100, int completionTokens = 50)
+    private static IChatClientFactory FakeStreamingClient(params string[] chunks)
     {
-        var response = new ChatResponse(new ChatMessage(ChatRole.Assistant, reply))
+        return FakeStreamingClient(promptTokens: 100, completionTokens: 50, chunks: chunks);
+    }
+
+    private static IChatClientFactory FakeStreamingClient(int promptTokens, int completionTokens, string[] chunks)
+    {
+        async IAsyncEnumerable<ChatResponseUpdate> Updates()
         {
-            Usage = new UsageDetails
+            foreach (var chunk in chunks)
             {
-                InputTokenCount = promptTokens,
-                OutputTokenCount = completionTokens,
-                TotalTokenCount = promptTokens + completionTokens
+                await Task.Yield();
+                yield return new ChatResponseUpdate(ChatRole.Assistant, chunk);
             }
-        };
+            // Final update with usage + finish reason
+            yield return new ChatResponseUpdate
+            {
+                FinishReason = ChatFinishReason.Stop,
+                Contents =
+                [
+                    new UsageContent(new UsageDetails
+                    {
+                        InputTokenCount = promptTokens,
+                        OutputTokenCount = completionTokens,
+                        TotalTokenCount = promptTokens + completionTokens
+                    })
+                ]
+            };
+        }
 
         var chatClient = Substitute.For<IChatClient>();
         chatClient
-            .GetResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions>(), Arg.Any<CancellationToken>())
-            .Returns(response);
+            .GetStreamingResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions>(), Arg.Any<CancellationToken>())
+            .Returns(Updates());
 
         var factory = Substitute.For<IChatClientFactory>();
         factory.Create(Arg.Any<string>()).Returns(chatClient);
@@ -400,7 +493,7 @@ public class SendMessageCommandTests
         return new SendMessageCommandHandler(
             userService,
             db,
-            chatClientFactory ?? FakeChatService("ok"),
+            chatClientFactory ?? FakeStreamingClient("ok"),
             creditsService ?? Substitute.For<ICreditsService>(),
             Substitute.For<IChatTitleGenerator>());
     }

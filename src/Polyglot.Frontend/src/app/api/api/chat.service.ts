@@ -21,13 +21,13 @@ import { ChatDetailDto } from '../model/chatDetailDto';
 // @ts-ignore
 import { ChatDto } from '../model/chatDto';
 // @ts-ignore
+import { ChatStreamPayload } from '../model/chatStreamPayload';
+// @ts-ignore
 import { ProblemDetails } from '../model/problemDetails';
 // @ts-ignore
 import { RenameChatCommand } from '../model/renameChatCommand';
 // @ts-ignore
 import { SendMessageCommand } from '../model/sendMessageCommand';
-// @ts-ignore
-import { SendMessageDto } from '../model/sendMessageDto';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -301,10 +301,10 @@ export class ChatService extends BaseService {
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public apiChatPost(sendMessageCommand?: SendMessageCommand, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<SendMessageDto>;
-    public apiChatPost(sendMessageCommand?: SendMessageCommand, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<SendMessageDto>>;
-    public apiChatPost(sendMessageCommand?: SendMessageCommand, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<SendMessageDto>>;
-    public apiChatPost(sendMessageCommand?: SendMessageCommand, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public apiChatPost(sendMessageCommand?: SendMessageCommand, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/event-stream', context?: HttpContext, transferCache?: boolean}): Observable<ChatStreamPayload>;
+    public apiChatPost(sendMessageCommand?: SendMessageCommand, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/event-stream', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<ChatStreamPayload>>;
+    public apiChatPost(sendMessageCommand?: SendMessageCommand, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/event-stream', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<ChatStreamPayload>>;
+    public apiChatPost(sendMessageCommand?: SendMessageCommand, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/event-stream', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -312,9 +312,7 @@ export class ChatService extends BaseService {
         localVarHeaders = this.configuration.addCredentialToHeaders('OpenIdConnect', 'Authorization', localVarHeaders, 'Bearer ');
 
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
-            'text/plain',
-            'application/json',
-            'text/json'
+            'text/event-stream'
         ]);
         if (localVarHttpHeaderAcceptSelected !== undefined) {
             localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
@@ -349,7 +347,7 @@ export class ChatService extends BaseService {
 
         let localVarPath = `/api/Chat`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<SendMessageDto>('post', `${basePath}${localVarPath}`,
+        return this.httpClient.request<ChatStreamPayload>('post', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 body: sendMessageCommand,

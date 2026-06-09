@@ -1,9 +1,10 @@
+using System.Runtime.CompilerServices;
+using System.Text;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Polyglot.Application.Dtos;
 using Polyglot.Application.Mappers;
-using Polyglot.Application.Models;
 using Polyglot.Domain;
 using Polyglot.Domain.Enums;
 using Polyglot.Infrastructure;
@@ -12,21 +13,92 @@ using Polyglot.Infrastructure.Services;
 
 namespace Polyglot.Application.Command
 {
-    public record SendMessageCommand(Guid? ChatId, string Message, string Model) : ICommand<Result<SendMessageDto>>;
+    public record SendMessageCommand(Guid? ChatId, string Message, string Model) : IStreamCommand<ChatStreamEvent>;
 
-    public class SendMessageCommandHandler(IUserService userService, PolyglotDbContext dbContext, IChatClientFactory chatClientFactory, ICreditsService creditsService, IChatTitleGenerator titleGenerator) : ICommandHandler<SendMessageCommand, Result<SendMessageDto>>
+    public abstract record ChatStreamEvent;
+    public sealed record ChatStreamChunk(string Text) : ChatStreamEvent;
+    public sealed record ChatStreamDone(SendMessageDto Result) : ChatStreamEvent;
+    public sealed record ChatStreamError(string Message) : ChatStreamEvent;
+
+    public class SendMessageCommandHandler(IUserService userService, PolyglotDbContext dbContext, IChatClientFactory chatClientFactory, ICreditsService creditsService, IChatTitleGenerator titleGenerator) : IStreamCommandHandler<SendMessageCommand, ChatStreamEvent>
     {
-        public async ValueTask<Result<SendMessageDto>> Handle(SendMessageCommand command, CancellationToken cancellationToken)
+        public async IAsyncEnumerable<ChatStreamEvent> Handle(SendMessageCommand command, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var preflight = await PreflightAsync(command, cancellationToken);
+            if (preflight.Error is not null)
+            {
+                yield return new ChatStreamError(preflight.Error);
+                yield break;
+            }
+
+            var ctx = preflight.Context!;
+            var chatClient = chatClientFactory.Create(command.Model);
+
+            var assistantContent = new StringBuilder();
+            UsageDetails? usage = null;
+            ChatFinishReason? finishReason = null;
+            string? streamError = null;
+
+            var stream = chatClient.GetStreamingResponseAsync(ctx.Messages, cancellationToken: cancellationToken);
+            await using var updates = stream.GetAsyncEnumerator(cancellationToken);
+            while (true)
+            {
+                ChatResponseUpdate? update = null;
+                try
+                {
+                    if (await updates.MoveNextAsync())
+                        update = updates.Current;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    streamError = $"The model provider returned an error: {ex.Message}";
+                }
+                if (update is null)
+                    break;
+
+                if (update.FinishReason is { } fr)
+                    finishReason = fr;
+
+                foreach (var content in update.Contents)
+                {
+                    switch (content)
+                    {
+                        case TextContent { Text: { Length: > 0 } text }:
+                            assistantContent.Append(text);
+                            yield return new ChatStreamChunk(text);
+                            break;
+                        case UsageContent uc:
+                            usage = uc.Details;
+                            break;
+                    }
+                }
+            }
+
+            if (streamError is not null)
+            {
+                yield return new ChatStreamError(streamError);
+                yield break;
+            }
+
+            var done = await FinalizeAsync(command, ctx, assistantContent.ToString(), finishReason, usage, cancellationToken);
+            yield return new ChatStreamDone(done);
+        }
+
+        private async Task<PreflightResult> PreflightAsync(SendMessageCommand command, CancellationToken cancellationToken)
         {
             var userId = await userService.GetCurrentUserIdAsync(cancellationToken);
             var user = await dbContext.Users.SingleAsync(u => u.Id == userId, cancellationToken);
 
             if (user.IsLocked)
-                return Result<SendMessageDto>.Failure("Your account has been locked. Please contact an administrator.");
+                return new PreflightResult { Error = "Your account has been locked. Please contact an administrator." };
 
             var model = await dbContext.Models.SingleOrDefaultAsync(m => m.ModelId == command.Model, cancellationToken);
             if (model is null)
-                return Result<SendMessageDto>.Failure($"Model '{command.Model}' not found");
+                return new PreflightResult { Error = $"Model '{command.Model}' not found" };
 
             var settings = await dbContext.AdminSettings.SingleAsync(cancellationToken);
 
@@ -35,20 +107,20 @@ namespace Polyglot.Application.Command
                 var isWhitelisted = await dbContext.ModelListEntries
                     .AnyAsync(e => e.ListType == ModelListType.Whitelist && e.ModelId == command.Model, cancellationToken);
                 if (!isWhitelisted)
-                    return Result<SendMessageDto>.Failure($"Model '{command.Model}' is not available");
+                    return new PreflightResult { Error = $"Model '{command.Model}' is not available" };
             }
             else if (settings.ActiveModelListMode == ModelListMode.Blacklist)
             {
                 var isBlacklisted = await dbContext.ModelListEntries
                     .AnyAsync(e => e.ListType == ModelListType.Blacklist && e.ModelId == command.Model, cancellationToken);
                 if (isBlacklisted)
-                    return Result<SendMessageDto>.Failure($"Model '{command.Model}' is not available");
+                    return new PreflightResult { Error = $"Model '{command.Model}' is not available" };
             }
 
             if (settings.MaxPricePerMillionTokens is not null
                 && (model.PromptPricePerMillion > settings.MaxPricePerMillionTokens
                     || model.CompletionPricePerMillion > settings.MaxPricePerMillionTokens))
-                return Result<SendMessageDto>.Failure($"Model '{command.Model}' is not available");
+                return new PreflightResult { Error = $"Model '{command.Model}' is not available" };
 
             Chat chat;
             if (command.ChatId is not null)
@@ -57,7 +129,7 @@ namespace Polyglot.Application.Command
                     .Include(c => c.Messages.OrderBy(m => m.SequenceNumber))
                     .SingleOrDefaultAsync(c => c.Id == command.ChatId.Value && c.UserId == userId, cancellationToken);
                 if (existing is null)
-                    return Result<SendMessageDto>.Failure("Chat not found");
+                    return new PreflightResult { Error = "Chat not found" };
                 chat = existing;
             }
             else
@@ -80,7 +152,7 @@ namespace Polyglot.Application.Command
                 cancellationToken);
 
             if (user.CreditBalance < worstCaseCredits)
-                return Result<SendMessageDto>.Failure($"Insufficient credits (need ~{worstCaseCredits}, have {user.CreditBalance})");
+                return new PreflightResult { Error = $"Insufficient credits (need ~{worstCaseCredits}, have {user.CreditBalance})" };
 
             var nextSequence = chat.Messages.Select(m => m.SequenceNumber).DefaultIfEmpty(-1).Max() + 1;
 
@@ -108,37 +180,42 @@ namespace Polyglot.Application.Command
                 messages.Add(new ChatMessage(role, msg.Content));
             }
 
-            var chatClient = chatClientFactory.Create(command.Model);
-            var response = await chatClient.GetResponseAsync(messages, cancellationToken: cancellationToken);
+            return new PreflightResult
+            {
+                Context = new PreflightContext(chat, model, user, userMessage, messages, nextSequence)
+            };
+        }
 
-            var promptTokens = (int)(response.Usage?.InputTokenCount ?? 0);
-            var completionTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+        private async Task<SendMessageDto> FinalizeAsync(SendMessageCommand command, PreflightContext ctx, string assistantText, ChatFinishReason? finishReason, UsageDetails? usage, CancellationToken cancellationToken)
+        {
+            var promptTokens = (int)(usage?.InputTokenCount ?? 0);
+            var completionTokens = (int)(usage?.OutputTokenCount ?? 0);
             var actualCredits = await creditsService.CalculateChatCreditsAsync(
                 promptTokens,
                 completionTokens,
-                model.PromptPricePerMillion,
-                model.CompletionPricePerMillion,
+                ctx.Model.PromptPricePerMillion,
+                ctx.Model.CompletionPricePerMillion,
                 cancellationToken);
 
-            user.CreditBalance -= actualCredits;
+            ctx.User.CreditBalance -= actualCredits;
 
             var assistantMessage = new Message
             {
-                ChatId = chat.Id,
+                ChatId = ctx.Chat.Id,
                 Role = MessageRole.Assistant,
-                Content = response.Text ?? string.Empty,
+                Content = assistantText,
                 Model = command.Model,
-                FinishReason = response.FinishReason?.ToString(),
+                FinishReason = finishReason?.ToString(),
                 TokenUsage = $"{promptTokens}/{completionTokens}",
-                SequenceNumber = nextSequence + 1
+                SequenceNumber = ctx.UserSequence + 1
             };
-            chat.Messages.Add(assistantMessage);
+            ctx.Chat.Messages.Add(assistantMessage);
             dbContext.Messages.Add(assistantMessage);
 
-            var isFirstExchange = chat.Title == "New Chat" && nextSequence == 0;
+            var isFirstExchange = ctx.Chat.Title == "New Chat" && ctx.UserSequence == 0;
             if (isFirstExchange)
             {
-                chat.Title = command.Message.Length > 50
+                ctx.Chat.Title = command.Message.Length > 50
                     ? command.Message[..50] + "..."
                     : command.Message;
             }
@@ -147,20 +224,33 @@ namespace Polyglot.Application.Command
 
             if (isFirstExchange)
             {
-                var placeholderTitle = chat.Title;
-                var chatId = chat.Id;
+                var placeholderTitle = ctx.Chat.Title;
+                var chatId = ctx.Chat.Id;
                 var userText = command.Message;
-                var assistantText = assistantMessage.Content;
                 _ = Task.Run(() => titleGenerator.GenerateAndSaveAsync(chatId, userText, assistantText, placeholderTitle));
             }
 
-            return Result<SendMessageDto>.Success(new SendMessageDto
+            return new SendMessageDto
             {
-                ChatId = chat.Id,
-                ChatTitle = chat.Title,
-                UserMessage = userMessage.ToDto(),
+                ChatId = ctx.Chat.Id,
+                ChatTitle = ctx.Chat.Title,
+                UserMessage = ctx.UserMessage.ToDto(),
                 AssistantMessage = assistantMessage.ToDto(),
-            });
+            };
         }
+
+        private sealed class PreflightResult
+        {
+            public string? Error { get; init; }
+            public PreflightContext? Context { get; init; }
+        }
+
+        private sealed record PreflightContext(
+            Chat Chat,
+            Domain.Model Model,
+            User User,
+            Message UserMessage,
+            List<ChatMessage> Messages,
+            int UserSequence);
     }
 }
