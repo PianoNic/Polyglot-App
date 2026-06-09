@@ -1,0 +1,42 @@
+name: Migrations guard
+
+on:
+  pull_request:
+    paths:
+      - "src/Polyglot.Infrastructure/Migrations/**"
+
+jobs:
+  seal-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fail if applied migrations were modified or deleted
+        run: |
+          git fetch origin "$GITHUB_BASE_REF"
+          CHANGED=$(git diff --name-only --diff-filter=MD "origin/$GITHUB_BASE_REF"...HEAD -- src/Polyglot.Infrastructure/Migrations/)
+          # The model snapshot legitimately changes with every new migration
+          VIOLATIONS=$(echo "$CHANGED" | grep -v 'ModelSnapshot.cs' | grep -v '^$' || true)
+          if [ -n "$VIOLATIONS" ]; then
+            echo "::error::Migrations are sealed once merged - only additions are allowed. Modified/deleted:"
+            echo "$VIOLATIONS"
+            echo "Create a new migration that undoes the unwanted changes instead."
+            exit 1
+          fi
+
+      - name: Fail if any migration has an empty Up() or Down()
+        run: |
+          EMPTY=""
+          for f in src/Polyglot.Infrastructure/Migrations/[0-9]*_*.cs; do
+            case "$f" in *.Designer.cs) continue ;; esac
+            if tr -d '[:space:]' < "$f" | grep -qE 'void(Up|Down)\(MigrationBuilder[A-Za-z]+\)\{\}'; then
+              EMPTY="$EMPTY $f"
+            fi
+          done
+          if [ -n "$EMPTY" ]; then
+            echo "::error::No-op migration detected (empty Up()/Down()) - symptom of snapshot drift:"
+            echo "$EMPTY"
+            exit 1
+          fi
