@@ -10,6 +10,7 @@ import {
 } from '@ngrx/signals';
 import { UserService } from '../../api/api/user.service';
 import type { UserDto } from '../../api/model/userDto';
+import { UserRole } from '../../api/model/userRole';
 
 type UserStoreState = {
   currentUser: UserDto | null;
@@ -26,6 +27,7 @@ export const UserStore = signalStore(
   withState(initialUserStore),
   withComputed((store) => ({
     creditBalance: computed(() => store.currentUser()?.creditBalance ?? 0),
+    isAdmin: computed(() => store.currentUser()?.role === UserRole.Admin),
   })),
   withMethods((store) => {
     const userService = inject(UserService);

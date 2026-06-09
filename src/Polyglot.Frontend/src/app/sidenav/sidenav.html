@@ -61,10 +61,12 @@
                   <ng-icon name="lucideMessageCircle" />
                   Chat
                 </a>
-                <a hlmDropdownMenuItem routerLink="/admin">
-                  <ng-icon name="lucideShield" />
-                  Admin
-                </a>
+                @if (userStore.isAdmin()) {
+                  <a hlmDropdownMenuItem routerLink="/admin">
+                    <ng-icon name="lucideShield" />
+                    Admin
+                  </a>
+                }
               </hlm-dropdown-menu-group>
 
               <hlm-dropdown-menu-separator />
