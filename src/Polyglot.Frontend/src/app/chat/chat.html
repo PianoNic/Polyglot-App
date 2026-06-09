@@ -51,7 +51,14 @@
       <pk-chat-container-content class="mx-auto w-full max-w-3xl gap-6">
         @for (m of store.messages(); track $index) {
           @if (m.role === Role.User) {
-            <pk-message class="max-w-[80%] justify-end self-end">
+            <pk-message class="max-w-[80%] flex-col items-end justify-end self-end">
+              @if (m.attachments.length > 0) {
+                <div class="mb-1 flex flex-wrap justify-end gap-2">
+                  @for (a of m.attachments; track a.id) {
+                    <pk-attachment-chip [attachment]="asChip(a)" [removable]="false" (clicked)="openAttachment($event)" />
+                  }
+                </div>
+              }
               <pk-message-content
                 class="bg-primary text-primary-foreground"
                 [content]="m.content"
@@ -102,6 +109,17 @@
           (ctaClicked)="retry()"
         />
       }
+      @if (store.pendingAttachments().length > 0) {
+        <div class="mb-2 flex flex-wrap gap-2">
+          @for (a of store.pendingAttachments(); track a.id) {
+            <pk-attachment-chip
+              [attachment]="asChip(a)"
+              (removed)="store.removeAttachment($event)"
+              (clicked)="openAttachment($event)"
+            />
+          }
+        </div>
+      }
       <pk-prompt-input
         class="border-0 shadow-none bg-muted/40"
         [(value)]="draft"
@@ -113,10 +131,18 @@
         <pk-prompt-input-actions class="mt-2 justify-between">
           <div class="flex items-center gap-1">
             <pk-prompt-input-action tooltip="Attach files">
-              <button hlmBtn variant="ghost" size="icon-sm" type="button" aria-label="Attach files" disabled>
+              <button hlmBtn variant="ghost" size="icon-sm" type="button" aria-label="Attach files" (click)="openFilePicker()">
                 <ng-icon hlm size="sm" name="lucidePaperclip" />
               </button>
             </pk-prompt-input-action>
+            <input
+              #fileInput
+              type="file"
+              class="hidden"
+              multiple
+              [accept]="acceptTypes()"
+              (change)="onFilesSelected($event)"
+            />
             <pk-prompt-input-action tooltip="Voice input">
               <button hlmBtn variant="ghost" size="icon-sm" type="button" aria-label="Voice input" disabled>
                 <ng-icon hlm size="sm" name="lucideMic" />

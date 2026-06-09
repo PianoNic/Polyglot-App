@@ -13,7 +13,7 @@ using Polyglot.Infrastructure.Services;
 
 namespace Polyglot.Application.Command
 {
-    public record SendMessageCommand(Guid? ChatId, string Message, string Model) : IStreamCommand<ChatStreamEvent>;
+    public record SendMessageCommand(Guid? ChatId, string Message, string Model, List<Guid>? AttachmentIds = null) : IStreamCommand<ChatStreamEvent>;
 
     public abstract record ChatStreamEvent;
     public sealed record ChatStreamChunk(string Text) : ChatStreamEvent;
@@ -154,6 +154,16 @@ namespace Polyglot.Application.Command
             if (user.CreditBalance < worstCaseCredits)
                 return new PreflightResult { Error = $"Insufficient credits (need ~{worstCaseCredits}, have {user.CreditBalance})" };
 
+            var newAttachments = new List<Attachment>();
+            if (command.AttachmentIds is { Count: > 0 })
+            {
+                newAttachments = await dbContext.Attachments
+                    .Where(a => command.AttachmentIds.Contains(a.Id) && a.UserId == userId && a.MessageId == null)
+                    .ToListAsync(cancellationToken);
+                if (newAttachments.Count != command.AttachmentIds.Count)
+                    return new PreflightResult { Error = "One or more attachments were not found" };
+            }
+
             var nextSequence = chat.Messages.Select(m => m.SequenceNumber).DefaultIfEmpty(-1).Max() + 1;
 
             var userMessage = new Message
@@ -166,6 +176,17 @@ namespace Polyglot.Application.Command
             chat.Messages.Add(userMessage);
             dbContext.Messages.Add(userMessage);
 
+            foreach (var attachment in newAttachments)
+                attachment.MessageId = userMessage.Id;
+
+            var historyIds = chat.Messages.Where(m => m.Id != userMessage.Id).Select(m => m.Id).ToList();
+            var historyAttachments = await dbContext.Attachments
+                .Where(a => a.MessageId != null && historyIds.Contains(a.MessageId.Value))
+                .ToListAsync(cancellationToken);
+            var attachmentsByMessage = historyAttachments
+                .Concat(newAttachments)
+                .ToLookup(a => a.MessageId!.Value);
+
             var messages = new List<ChatMessage>(chat.Messages.Count);
             foreach (var msg in chat.Messages.OrderBy(m => m.SequenceNumber))
             {
@@ -177,12 +198,18 @@ namespace Polyglot.Application.Command
                     MessageRole.Tool => ChatRole.Tool,
                     _ => ChatRole.User
                 };
-                messages.Add(new ChatMessage(role, msg.Content));
+
+                var contents = new List<AIContent>();
+                if (!string.IsNullOrEmpty(msg.Content))
+                    contents.Add(new TextContent(msg.Content));
+                foreach (var attachment in attachmentsByMessage[msg.Id])
+                    contents.Add(ToAIContent(attachment));
+                messages.Add(new ChatMessage(role, contents));
             }
 
             return new PreflightResult
             {
-                Context = new PreflightContext(chat, model, user, userMessage, messages, nextSequence)
+                Context = new PreflightContext(chat, model, user, userMessage, messages, nextSequence, newAttachments)
             };
         }
 
@@ -230,13 +257,33 @@ namespace Polyglot.Application.Command
                 _ = Task.Run(() => titleGenerator.GenerateAndSaveAsync(chatId, userText, assistantText, placeholderTitle));
             }
 
+            var userAttachmentDtos = ctx.NewAttachments
+                .Select(a => new AttachmentDto
+                {
+                    Id = a.Id,
+                    FileName = a.FileName,
+                    MediaType = a.MediaType,
+                    SizeBytes = a.SizeBytes,
+                })
+                .ToList();
+
             return new SendMessageDto
             {
                 ChatId = ctx.Chat.Id,
                 ChatTitle = ctx.Chat.Title,
-                UserMessage = ctx.UserMessage.ToDto(),
+                UserMessage = ctx.UserMessage.ToDto(userAttachmentDtos),
                 AssistantMessage = assistantMessage.ToDto(),
             };
+        }
+
+        // Images and PDFs go to the model as base64 data URIs (DataContent);
+        // plain-text files are inlined as prompt text.
+        private static AIContent ToAIContent(Attachment attachment)
+        {
+            if (attachment.MediaType.StartsWith("text/", StringComparison.OrdinalIgnoreCase))
+                return new TextContent($"[Attached file: {attachment.FileName}]\n{System.Text.Encoding.UTF8.GetString(attachment.Data)}");
+
+            return new DataContent(attachment.Data, attachment.MediaType);
         }
 
         private sealed class PreflightResult
@@ -251,6 +298,7 @@ namespace Polyglot.Application.Command
             User User,
             Message UserMessage,
             List<ChatMessage> Messages,
-            int UserSequence);
+            int UserSequence,
+            List<Attachment> NewAttachments);
     }
 }

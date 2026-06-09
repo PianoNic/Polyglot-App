@@ -22,7 +22,24 @@ namespace Polyglot.Application.Queries
             if (chat is null)
                 return Result<ChatDetailDto>.Failure("Chat not found");
 
-            return Result<ChatDetailDto>.Success(chat.ToDetailDto());
+            var messageIds = chat.Messages.Select(m => m.Id).ToList();
+            var attachments = await dbContext.Attachments
+                .Where(a => a.MessageId != null && messageIds.Contains(a.MessageId.Value))
+                .Select(a => new
+                {
+                    MessageId = a.MessageId!.Value,
+                    Dto = new AttachmentDto
+                    {
+                        Id = a.Id,
+                        FileName = a.FileName,
+                        MediaType = a.MediaType,
+                        SizeBytes = a.SizeBytes,
+                    },
+                })
+                .ToListAsync(cancellationToken);
+            var attachmentsByMessage = attachments.ToLookup(a => a.MessageId, a => a.Dto);
+
+            return Result<ChatDetailDto>.Success(chat.ToDetailDto(attachmentsByMessage));
         }
     }
 }

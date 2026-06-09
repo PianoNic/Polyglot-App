@@ -5,7 +5,7 @@ namespace Polyglot.Application.Mappers
 {
     public static class MessageMapper
     {
-        public static MessageDto ToDto(this Message message)
+        public static MessageDto ToDto(this Message message, List<AttachmentDto>? attachments = null)
         {
             return new MessageDto
             {
@@ -18,6 +18,7 @@ namespace Polyglot.Application.Mappers
                 FinishReason = message.FinishReason,
                 SequenceNumber = message.SequenceNumber,
                 CreatedAt = message.CreatedAt,
+                Attachments = attachments ?? [],
             };
         }
     }

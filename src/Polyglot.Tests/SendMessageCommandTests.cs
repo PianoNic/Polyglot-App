@@ -394,6 +394,64 @@ public class SendMessageCommandTests
         await Assert.That(((ChatStreamError)events[^1]).Message).Contains("upstream exploded");
     }
 
+    [Test]
+    public async Task Handle_WithImageAttachment_LinksAndSendsMultimodal()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db);
+        var attachment = new Attachment
+        {
+            UserId = user.Id,
+            FileName = "pic.png",
+            MediaType = "image/png",
+            Data = [1, 2, 3],
+            SizeBytes = 3,
+        };
+        db.Attachments.Add(attachment);
+        await db.SaveChangesAsync();
+
+        List<ChatMessage>? captured = null;
+        var chatClient = Substitute.For<IChatClient>();
+        chatClient
+            .GetStreamingResponseAsync(
+                Arg.Do<IEnumerable<ChatMessage>>(m => captured = m.ToList()),
+                Arg.Any<ChatOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns(FakeUpdates("Hi"));
+        var factory = Substitute.For<IChatClientFactory>();
+        factory.Create(Arg.Any<string>()).Returns(chatClient);
+        var handler = CreateHandler(db, user.Id, chatClientFactory: factory);
+
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "What is this?", "gpt-4", [attachment.Id]), CancellationToken.None));
+
+        await Assert.That(events[^1]).IsTypeOf<ChatStreamDone>();
+        var done = (ChatStreamDone)events[^1];
+        await Assert.That(done.Result.UserMessage.Attachments.Count).IsEqualTo(1);
+        await Assert.That(done.Result.UserMessage.Attachments[0].FileName).IsEqualTo("pic.png");
+
+        var linked = await db.Attachments.SingleAsync(a => a.Id == attachment.Id);
+        await Assert.That(linked.MessageId).IsNotNull();
+
+        var sentUserMessage = captured!.Last(m => m.Role == ChatRole.User);
+        await Assert.That(sentUserMessage.Contents.OfType<DataContent>().Count()).IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task Handle_UnknownAttachment_EmitsError()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db);
+        var handler = CreateHandler(db, user.Id);
+
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4", [Guid.NewGuid()]), CancellationToken.None));
+
+        await Assert.That(events.Count).IsEqualTo(1);
+        await Assert.That(events[0]).IsTypeOf<ChatStreamError>();
+        await Assert.That(((ChatStreamError)events[0]).Message).Contains("attachments");
+    }
+
     // --- Simple factory methods (no logic, just reduce repeated boilerplate) ---
 
     private static async Task<List<ChatStreamEvent>> Collect(IAsyncEnumerable<ChatStreamEvent> stream)
@@ -444,6 +502,29 @@ public class SendMessageCommandTests
     private static IChatClientFactory FakeStreamingClient(params string[] chunks)
     {
         return FakeStreamingClient(promptTokens: 100, completionTokens: 50, chunks: chunks);
+    }
+
+    private static async IAsyncEnumerable<ChatResponseUpdate> FakeUpdates(params string[] chunks)
+    {
+        foreach (var chunk in chunks)
+        {
+            await Task.Yield();
+            yield return new ChatResponseUpdate(ChatRole.Assistant, chunk);
+        }
+        // Final update with usage + finish reason
+        yield return new ChatResponseUpdate
+        {
+            FinishReason = ChatFinishReason.Stop,
+            Contents =
+            [
+                new UsageContent(new UsageDetails
+                {
+                    InputTokenCount = 100,
+                    OutputTokenCount = 50,
+                    TotalTokenCount = 150
+                })
+            ]
+        };
     }
 
     private static IChatClientFactory FakeStreamingClient(int promptTokens, int completionTokens, string[] chunks)
