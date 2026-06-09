@@ -8,6 +8,7 @@ namespace Polyglot.Infrastructure.BackgroundServices
         public static IServiceCollection AddHostedServices(this IServiceCollection services)
         {
             services.AddHostedService<ModelSyncService>();
+            services.AddHostedService<PostgresBackupService>();
             return services;
         }
     }
