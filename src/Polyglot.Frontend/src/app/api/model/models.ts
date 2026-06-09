@@ -5,6 +5,7 @@ export * from './appDto';
 export * from './availableModelDto';
 export * from './chatDetailDto';
 export * from './chatDto';
+export * from './chatStreamPayload';
 export * from './creditAdjustmentMode';
 export * from './messageDto';
 export * from './messageRole';

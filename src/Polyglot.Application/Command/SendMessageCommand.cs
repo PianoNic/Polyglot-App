@@ -37,9 +37,29 @@ namespace Polyglot.Application.Command
             var assistantContent = new StringBuilder();
             UsageDetails? usage = null;
             ChatFinishReason? finishReason = null;
+            string? streamError = null;
 
-            await foreach (var update in chatClient.GetStreamingResponseAsync(ctx.Messages, cancellationToken: cancellationToken))
+            var stream = chatClient.GetStreamingResponseAsync(ctx.Messages, cancellationToken: cancellationToken);
+            await using var updates = stream.GetAsyncEnumerator(cancellationToken);
+            while (true)
             {
+                ChatResponseUpdate? update = null;
+                try
+                {
+                    if (await updates.MoveNextAsync())
+                        update = updates.Current;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    streamError = $"The model provider returned an error: {ex.Message}";
+                }
+                if (update is null)
+                    break;
+
                 if (update.FinishReason is { } fr)
                     finishReason = fr;
 
@@ -56,6 +76,12 @@ namespace Polyglot.Application.Command
                             break;
                     }
                 }
+            }
+
+            if (streamError is not null)
+            {
+                yield return new ChatStreamError(streamError);
+                yield break;
             }
 
             var done = await FinalizeAsync(command, ctx, assistantContent.ToString(), finishReason, usage, cancellationToken);

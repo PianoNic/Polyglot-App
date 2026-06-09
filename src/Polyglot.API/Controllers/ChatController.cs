@@ -43,6 +43,7 @@ namespace Polyglot.API.Controllers
 
         [HttpPost]
         [Produces("text/event-stream")]
+        [ProducesResponseType(typeof(ChatStreamPayload), StatusCodes.Status200OK)]
         public ServerSentEventsResult<ChatStreamPayload> SendMessage([FromBody] SendMessageCommand command, CancellationToken cancellationToken)
             => TypedResults.ServerSentEvents(StreamMessage(command, cancellationToken));
 

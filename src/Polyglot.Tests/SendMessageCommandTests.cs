@@ -365,6 +365,35 @@ public class SendMessageCommandTests
         await Assert.That(events[^1]).IsTypeOf<ChatStreamDone>();
     }
 
+    [Test]
+    public async Task Handle_ProviderFailsMidStream_EmitsErrorNotException()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db);
+
+        async IAsyncEnumerable<ChatResponseUpdate> FailingUpdates()
+        {
+            await Task.Yield();
+            yield return new ChatResponseUpdate(ChatRole.Assistant, "partial");
+            throw new InvalidOperationException("upstream exploded");
+        }
+
+        var chatClient = Substitute.For<IChatClient>();
+        chatClient
+            .GetStreamingResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions>(), Arg.Any<CancellationToken>())
+            .Returns(FailingUpdates());
+        var factory = Substitute.For<IChatClientFactory>();
+        factory.Create(Arg.Any<string>()).Returns(chatClient);
+        var handler = CreateHandler(db, user.Id, chatClientFactory: factory);
+
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
+
+        await Assert.That(events[0]).IsTypeOf<ChatStreamChunk>();
+        await Assert.That(events[^1]).IsTypeOf<ChatStreamError>();
+        await Assert.That(((ChatStreamError)events[^1]).Message).Contains("upstream exploded");
+    }
+
     // --- Simple factory methods (no logic, just reduce repeated boilerplate) ---
 
     private static async Task<List<ChatStreamEvent>> Collect(IAsyncEnumerable<ChatStreamEvent> stream)

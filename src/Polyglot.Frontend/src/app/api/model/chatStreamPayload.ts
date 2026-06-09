@@ -7,11 +7,12 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { SendMessageDto } from './sendMessageDto';
 
 
-export interface SendMessageCommand { 
-    chatId?: string | null;
-    message?: string;
-    model?: string;
+export interface ChatStreamPayload { 
+    text?: string | null;
+    result?: SendMessageDto;
+    error?: string | null;
 }
 

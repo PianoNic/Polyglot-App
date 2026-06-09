@@ -1,6 +1,12 @@
 import { computed, inject } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import {
+  HttpErrorResponse,
+  HttpEventType,
+  type HttpDownloadProgressEvent,
+  type HttpEvent,
+  type HttpResponse,
+} from '@angular/common/http';
+import { firstValueFrom, type Observable } from 'rxjs';
 import {
   patchState,
   signalStore,
@@ -12,7 +18,9 @@ import {
 import { ChatService } from '../../api/api/chat.service';
 import { ModelService } from '../../api/api/model.service';
 import type { AvailableModelDto } from '../../api/model/availableModelDto';
+import type { ChatStreamPayload } from '../../api/model/chatStreamPayload';
 import type { MessageDto } from '../../api/model/messageDto';
+import type { SendMessageDto } from '../../api/model/sendMessageDto';
 import { MessageRole } from '../../api/model/messageRole';
 import type { Conversation } from '../../../../libs/prompt-kit/conversation-list/pk-conversation-types';
 
@@ -30,6 +38,7 @@ type ChatStoreState = {
   models: AvailableModelDto[];
   selectedModelId: string | null;
   isSending: boolean;
+  streamingText: string;
   isLoadingChat: boolean;
   sendError: string | null;
   chatsLoaded: boolean;
@@ -44,6 +53,7 @@ export const initialChatStore: ChatStoreState = {
   models: [],
   selectedModelId: readPersistedModel(),
   isSending: false,
+  streamingText: '',
   isLoadingChat: false,
   sendError: null,
   chatsLoaded: false,
@@ -177,12 +187,14 @@ export const ChatStore = signalStore(
       patchState(store, (state) => ({
         isSending: true,
         sendError: null,
+        streamingText: '',
         messages: [...state.messages, optimistic],
       }));
 
       try {
-        const response = await firstValueFrom(
-          chatApi.apiChatPost({ chatId: store.activeChatId(), message: trimmed, model }),
+        const response = await streamSend(
+          chatApi.apiChatPost({ chatId: store.activeChatId(), message: trimmed, model }, 'events', true),
+          (token) => patchState(store, (state) => ({ streamingText: state.streamingText + token })),
         );
 
         patchState(store, {
@@ -209,7 +221,7 @@ export const ChatStore = signalStore(
         });
         return { kind: 'error', error: message };
       } finally {
-        patchState(store, { isSending: false });
+        patchState(store, { isSending: false, streamingText: '' });
       }
     }
 
@@ -255,6 +267,78 @@ export const ChatStore = signalStore(
 
 function byUpdatedDesc(a: Conversation, b: Conversation): number {
   return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+}
+
+/**
+ * Consumes the SSE stream from POST /api/Chat. The generated client requests
+ * `text/event-stream` with `responseType: 'text'`, so progress events carry the
+ * cumulative raw body; complete frames are parsed out as they arrive.
+ */
+function streamSend(
+  events$: Observable<HttpEvent<ChatStreamPayload>>,
+  onToken: (token: string) => void,
+): Promise<SendMessageDto> {
+  return new Promise((resolve, reject) => {
+    let parsedUpTo = 0;
+    let buffer = '';
+    let result: SendMessageDto | null = null;
+    let failed: string | null = null;
+
+    function ingest(cumulativeText: string): void {
+      buffer += cumulativeText.slice(parsedUpTo).replace(/\r\n/g, '\n');
+      parsedUpTo = cumulativeText.length;
+      buffer = consumeSseFrames(buffer, (event, data) => {
+        const payload = JSON.parse(data) as ChatStreamPayload;
+        if (event === 'chunk' && payload.text) {
+          onToken(payload.text);
+        } else if (event === 'done' && payload.result) {
+          result = payload.result;
+        } else if (event === 'error') {
+          failed = payload.error ?? 'Send failed.';
+        }
+      });
+    }
+
+    events$.subscribe({
+      next: (event) => {
+        if (event.type === HttpEventType.DownloadProgress) {
+          ingest((event as HttpDownloadProgressEvent).partialText ?? '');
+        } else if (event.type === HttpEventType.Response) {
+          ingest(((event as HttpResponse<unknown>).body as string | null) ?? '');
+          if (failed)
+            reject(new Error(failed));
+          else if (result)
+            resolve(result);
+          else
+            reject(new Error('The stream ended unexpectedly.'));
+        }
+      },
+      error: (err) => reject(err),
+    });
+  });
+}
+
+function consumeSseFrames(
+  buffer: string,
+  handle: (event: string, data: string) => void,
+): string {
+  let separatorIndex = buffer.indexOf('\n\n');
+  while (separatorIndex !== -1) {
+    const rawFrame = buffer.slice(0, separatorIndex);
+    buffer = buffer.slice(separatorIndex + 2);
+    let event = 'message';
+    const dataLines: string[] = [];
+    for (const line of rawFrame.split('\n')) {
+      if (line.startsWith('event:'))
+        event = line.slice('event:'.length).trim();
+      else if (line.startsWith('data:'))
+        dataLines.push(line.slice(line.startsWith('data: ') ? 'data: '.length : 'data:'.length));
+    }
+    if (dataLines.length > 0)
+      handle(event, dataLines.join('\n'));
+    separatorIndex = buffer.indexOf('\n\n');
+  }
+  return buffer;
 }
 
 function describeError(err: unknown): string {
