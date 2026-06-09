@@ -7,12 +7,17 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { ChatStreamPayloadType } from './chatStreamPayloadType';
 import { SendMessageDto } from './sendMessageDto';
 
 
 export interface ChatStreamPayload { 
+    type?: ChatStreamPayloadType;
     text?: string | null;
     result?: SendMessageDto;
     error?: string | null;
 }
+export namespace ChatStreamPayload {
+}
+
 

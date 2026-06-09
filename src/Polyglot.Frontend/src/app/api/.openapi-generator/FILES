@@ -20,6 +20,7 @@ model/availableModelDto.ts
 model/chatDetailDto.ts
 model/chatDto.ts
 model/chatStreamPayload.ts
+model/chatStreamPayloadType.ts
 model/creditAdjustmentMode.ts
 model/messageDto.ts
 model/messageRole.ts

@@ -19,6 +19,7 @@ import { ChatService } from '../../api/api/chat.service';
 import { ModelService } from '../../api/api/model.service';
 import type { AvailableModelDto } from '../../api/model/availableModelDto';
 import type { ChatStreamPayload } from '../../api/model/chatStreamPayload';
+import { ChatStreamPayloadType } from '../../api/model/chatStreamPayloadType';
 import type { MessageDto } from '../../api/model/messageDto';
 import type { SendMessageDto } from '../../api/model/sendMessageDto';
 import { MessageRole } from '../../api/model/messageRole';
@@ -39,6 +40,7 @@ type ChatStoreState = {
   selectedModelId: string | null;
   isSending: boolean;
   streamingText: string;
+  streamDone: boolean;
   isLoadingChat: boolean;
   sendError: string | null;
   chatsLoaded: boolean;
@@ -54,6 +56,7 @@ export const initialChatStore: ChatStoreState = {
   selectedModelId: readPersistedModel(),
   isSending: false,
   streamingText: '',
+  streamDone: false,
   isLoadingChat: false,
   sendError: null,
   chatsLoaded: false,
@@ -87,6 +90,7 @@ export const ChatStore = signalStore(
     const chatApi = inject(ChatService);
     const modelApi = inject(ModelService);
     let inFlight: { id: string; promise: Promise<void> } | null = null;
+    let pendingStream: { response: SendMessageDto; optimisticId: string } | null = null;
 
     function touchChat(id: string | null): void {
       if (!id)
@@ -174,7 +178,7 @@ export const ChatStore = signalStore(
       const model = store.selectedModelId();
       if (!trimmed || !model)
         return { kind: 'error', error: 'Pick a model and type a message.' };
-      if (store.isSending())
+      if (store.isSending() || store.streamingText())
         return { kind: 'error', error: 'A message is already being sent.' };
 
       const optimistic: MessageDto = {
@@ -188,6 +192,7 @@ export const ChatStore = signalStore(
         isSending: true,
         sendError: null,
         streamingText: '',
+        streamDone: false,
         messages: [...state.messages, optimistic],
       }));
 
@@ -197,14 +202,14 @@ export const ChatStore = signalStore(
           (token) => patchState(store, (state) => ({ streamingText: state.streamingText + token })),
         );
 
-        patchState(store, {
-          messages: [
-            ...store.messages().filter((m) => m.id !== optimistic.id),
-            response.userMessage,
-            response.assistantMessage,
-          ],
-          activeChatTitle: response.chatTitle,
-        });
+        // Hold the final messages until the reveal animation catches up —
+        // commitStream() (wired to pk-response-stream's `finished` output)
+        // performs the actual swap.
+        pendingStream = { response, optimisticId: optimistic.id };
+        patchState(store, { activeChatTitle: response.chatTitle, isSending: false, streamDone: true });
+
+        if (!store.streamingText())
+          commitStream();
 
         if (response.chatId !== store.activeChatId()) {
           patchState(store, { activeChatId: response.chatId });
@@ -215,14 +220,32 @@ export const ChatStore = signalStore(
         return { kind: 'sent', newId: null };
       } catch (err) {
         const message = describeError(err);
+        pendingStream = null;
         patchState(store, {
           messages: store.messages().filter((m) => m.id !== optimistic.id),
           sendError: message,
+          isSending: false,
+          streamingText: '',
+          streamDone: false,
         });
         return { kind: 'error', error: message };
-      } finally {
-        patchState(store, { isSending: false, streamingText: '' });
       }
+    }
+
+    function commitStream(): void {
+      if (!pendingStream)
+        return;
+      const { response, optimisticId } = pendingStream;
+      pendingStream = null;
+      patchState(store, {
+        messages: [
+          ...store.messages().filter((m) => m.id !== optimisticId),
+          response.userMessage,
+          response.assistantMessage,
+        ],
+        streamingText: '',
+        streamDone: false,
+      });
     }
 
     function clearSendError(): void {
@@ -257,6 +280,7 @@ export const ChatStore = signalStore(
       newChat,
       setSelectedModel,
       sendMessage,
+      commitStream,
       clearSendError,
       renameChat,
       deleteChat,
@@ -287,13 +311,15 @@ function streamSend(
     function ingest(cumulativeText: string): void {
       buffer += cumulativeText.slice(parsedUpTo).replace(/\r\n/g, '\n');
       parsedUpTo = cumulativeText.length;
-      buffer = consumeSseFrames(buffer, (event, data) => {
+      buffer = consumeSseFrames(buffer, (data) => {
+        // The discriminator lives in the payload (not the SSE event name) so
+        // the same handling works over any transport, e.g. WebSockets.
         const payload = JSON.parse(data) as ChatStreamPayload;
-        if (event === 'chunk' && payload.text) {
+        if (payload.type === ChatStreamPayloadType.Chunk && payload.text) {
           onToken(payload.text);
-        } else if (event === 'done' && payload.result) {
+        } else if (payload.type === ChatStreamPayloadType.Done && payload.result) {
           result = payload.result;
-        } else if (event === 'error') {
+        } else if (payload.type === ChatStreamPayloadType.Error) {
           failed = payload.error ?? 'Send failed.';
         }
       });
@@ -320,22 +346,19 @@ function streamSend(
 
 function consumeSseFrames(
   buffer: string,
-  handle: (event: string, data: string) => void,
+  handle: (data: string) => void,
 ): string {
   let separatorIndex = buffer.indexOf('\n\n');
   while (separatorIndex !== -1) {
     const rawFrame = buffer.slice(0, separatorIndex);
     buffer = buffer.slice(separatorIndex + 2);
-    let event = 'message';
     const dataLines: string[] = [];
     for (const line of rawFrame.split('\n')) {
-      if (line.startsWith('event:'))
-        event = line.slice('event:'.length).trim();
-      else if (line.startsWith('data:'))
+      if (line.startsWith('data:'))
         dataLines.push(line.slice(line.startsWith('data: ') ? 'data: '.length : 'data:'.length));
     }
     if (dataLines.length > 0)
-      handle(event, dataLines.join('\n'));
+      handle(dataLines.join('\n'));
     separatorIndex = buffer.indexOf('\n\n');
   }
   return buffer;

@@ -64,19 +64,23 @@
             </pk-message>
           }
         }
-        @if (store.isSending()) {
-          @if (store.streamingText()) {
-            <pk-message class="max-w-[85%] self-start">
-              <pk-message-avatar src="" alt="Assistant" fallback="AI" />
-              <pk-message-content class="bg-transparent p-0">
-                <pk-response-stream [textStream]="store.streamingText()" />
-              </pk-message-content>
-            </pk-message>
-          } @else {
-            <div class="flex items-center gap-3 pl-11">
-              <pk-loader variant="text-shimmer" text="Thinking..." />
-            </div>
-          }
+        @if (store.streamingText()) {
+          <pk-message class="max-w-[85%] self-start">
+            <pk-message-avatar src="" alt="Assistant" fallback="AI" />
+            <pk-message-content class="bg-transparent p-0">
+              <pk-response-stream
+                [textStream]="store.streamingText()"
+                [speed]="10"
+                [adaptive]="true"
+                [done]="store.streamDone()"
+                (finished)="store.commitStream()"
+              />
+            </pk-message-content>
+          </pk-message>
+        } @else if (store.isSending()) {
+          <div class="flex items-center gap-3 pl-11">
+            <pk-loader variant="text-shimmer" text="Thinking..." />
+          </div>
         }
       </pk-chat-container-content>
       <pk-chat-container-scroll-anchor />

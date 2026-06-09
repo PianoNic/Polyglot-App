@@ -98,6 +98,7 @@ export class Chat implements OnInit {
       d.trim().length > 0 &&
       d.length <= this.inputLimit &&
       !this.store.isSending() &&
+      !this.store.streamingText() &&
       !!this.store.selectedModelId()
     );
   });
