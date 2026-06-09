@@ -10,12 +10,14 @@
 
 
 export interface AvailableModelDto { 
-    id?: string | null;
-    name?: string | null;
-    contextLength?: number;
-    inputModalities?: Array<string> | null;
-    outputModalities?: Array<string> | null;
-    promptPricePerMillion?: number;
-    completionPricePerMillion?: number;
+    id: string;
+    name: string;
+    provider: string;
+    currency: string;
+    contextLength: number;
+    inputModalities: Array<string>;
+    outputModalities: Array<string>;
+    inputPricePer1M: number;
+    outputPricePer1M: number;
 }
 

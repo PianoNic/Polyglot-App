@@ -11,6 +11,6 @@
 
 export interface RenameChatCommand { 
     chatId?: string;
-    title?: string | null;
+    title?: string;
 }
 

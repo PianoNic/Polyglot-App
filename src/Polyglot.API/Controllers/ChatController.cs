@@ -11,13 +11,12 @@ using Microsoft.AspNetCore.Mvc;
 using Polyglot.Application.Command;
 using Polyglot.Application.Dtos;
 using Polyglot.Application.Queries;
-using Polyglot.Application.Services;
 
 namespace Polyglot.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ChatController(IMediator mediator, IChatStreamService chatStreamService) : ControllerBase
+    public class ChatController(IMediator mediator) : ControllerBase
     {
         [HttpGet]
         [ProducesResponseType(typeof(List<ChatDto>), StatusCodes.Status200OK)]
@@ -51,7 +50,7 @@ namespace Polyglot.API.Controllers
             SendMessageCommand command,
             [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            await foreach (var evt in chatStreamService.StreamMessageAsync(command, cancellationToken))
+            await foreach (var evt in mediator.CreateStream(command, cancellationToken))
             {
                 yield return evt switch
                 {

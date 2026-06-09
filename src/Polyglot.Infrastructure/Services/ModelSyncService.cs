@@ -64,8 +64,8 @@ namespace Polyglot.Infrastructure.Services
                             row.ContextLength = f.ContextLength;
                             row.InputModalities = f.InputModalities;
                             row.OutputModalities = f.OutputModalities;
-                            row.PromptPricePerMillion = f.PromptPricePerMillion;
-                            row.CompletionPricePerMillion = f.CompletionPricePerMillion;
+                            row.PromptPricePerMillion = f.InputPricePer1M;
+                            row.CompletionPricePerMillion = f.OutputPricePer1M;
                         }
                         else
                         {
@@ -76,8 +76,8 @@ namespace Polyglot.Infrastructure.Services
                                 ContextLength = f.ContextLength,
                                 InputModalities = f.InputModalities,
                                 OutputModalities = f.OutputModalities,
-                                PromptPricePerMillion = f.PromptPricePerMillion,
-                                CompletionPricePerMillion = f.CompletionPricePerMillion,
+                                PromptPricePerMillion = f.InputPricePer1M,
+                                CompletionPricePerMillion = f.OutputPricePer1M,
                             });
                         }
                     }

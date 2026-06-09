@@ -29,7 +29,20 @@ namespace Polyglot.Infrastructure.Clients
                 var promptPrice = decimal.Parse(pricing.GetProperty("prompt").GetString() ?? "0") * 1_000_000;
                 var completionPrice = decimal.Parse(pricing.GetProperty("completion").GetString() ?? "0") * 1_000_000;
 
-                models.Add(new AvailableModelDto(id, name, contextLength, inputModalities, outputModalities, promptPrice, completionPrice));
+                var slashIndex = id.IndexOf('/');
+                var provider = slashIndex > 0 ? id[..slashIndex] : string.Empty;
+                models.Add(new AvailableModelDto
+                {
+                    Id = id,
+                    Name = name,
+                    Provider = provider,
+                    Currency = "USD",
+                    ContextLength = contextLength,
+                    InputModalities = inputModalities,
+                    OutputModalities = outputModalities,
+                    InputPricePer1M = promptPrice,
+                    OutputPricePer1M = completionPrice,
+                });
             }
 
             return models;

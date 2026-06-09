@@ -1,1 +1,136 @@
-<p>chat works!</p>
+<section class="flex min-h-0 flex-1 flex-col overflow-hidden">
+  <polyglot-content-header>
+    <hlm-popover
+      slot="left"
+      sideOffset="6"
+      [state]="modelMenuState()"
+      (stateChanged)="modelMenuState.set($event)"
+    >
+      <button
+        hlmBtn
+        variant="outline"
+        size="sm"
+        type="button"
+        hlmPopoverTrigger
+        class="justify-between gap-2"
+      >
+        <span [class.text-muted-foreground]="!store.selectedModelId()">{{ activeModelLabel() }}</span>
+        <ng-icon hlm size="xs" name="lucideChevronDown" />
+      </button>
+      <hlm-popover-content class="w-80 p-0" *hlmPopoverPortal>
+        <pk-model-list
+          [models]="store.models()"
+          [selectedId]="store.selectedModelId()"
+          (changed)="onModelChanged($event.id)"
+          searchPlaceholder="Search models..."
+        />
+      </hlm-popover-content>
+    </hlm-popover>
+    <div slot="right" class="contents">
+      <span class="text-muted-foreground truncate text-xs">
+        {{ store.activeChatTitle() ?? 'New chat' }}
+      </span>
+    </div>
+  </polyglot-content-header>
+
+  @if (store.isLoadingChat()) {
+    <div class="flex flex-1 items-center justify-center">
+      <pk-loader variant="dots" size="md" />
+    </div>
+  } @else if (!hasMessages() && !store.isSending()) {
+    <div class="flex flex-1 items-center justify-center px-4">
+      <pk-chat-empty
+        title="What's on your mind?"
+        subtitle="Pick a model, ask anything, or start from a suggestion."
+        [suggestions]="suggestions"
+        (suggestionPicked)="onSuggestion($event)"
+      />
+    </div>
+  } @else {
+    <pk-chat-container-root class="relative flex-1 px-4 py-4">
+      <pk-chat-container-content class="mx-auto w-full max-w-3xl gap-6">
+        @for (m of store.messages(); track $index) {
+          @if (m.role === Role.User) {
+            <pk-message class="max-w-[80%] justify-end self-end">
+              <pk-message-content
+                class="bg-primary text-primary-foreground"
+                [content]="m.content"
+              />
+            </pk-message>
+          } @else {
+            <pk-message class="max-w-[85%] self-start">
+              <pk-message-avatar src="" alt="Assistant" fallback="AI" />
+              <pk-message-content [markdown]="true" [content]="m.content" class="bg-transparent p-0" />
+            </pk-message>
+          }
+        }
+        @if (store.isSending()) {
+          <div class="flex items-center gap-3 pl-11">
+            <pk-loader variant="text-shimmer" text="Thinking..." />
+          </div>
+        }
+      </pk-chat-container-content>
+      <pk-chat-container-scroll-anchor />
+      <div class="sticky bottom-2 ml-auto w-fit pr-1">
+        <pk-scroll-button />
+      </div>
+    </pk-chat-container-root>
+  }
+
+  <div class="px-4 py-3">
+    <div class="mx-auto w-full max-w-3xl">
+      @if (store.sendError(); as err) {
+        <pk-system-message
+          variant="error"
+          [fill]="true"
+          [text]="err"
+          ctaLabel="Retry"
+          class="mb-2 block"
+          (ctaClicked)="retry()"
+        />
+      }
+      <pk-prompt-input
+        class="border-0 shadow-none bg-muted/40"
+        [(value)]="draft"
+        [isLoading]="store.isSending()"
+        [disabled]="!store.selectedModelId()"
+        (submitted)="onSubmit()"
+      >
+        <pk-prompt-input-textarea placeholder="Ask anything..." />
+        <pk-prompt-input-actions class="mt-2 justify-between">
+          <div class="flex items-center gap-1">
+            <pk-prompt-input-action tooltip="Attach files">
+              <button hlmBtn variant="ghost" size="icon-sm" type="button" aria-label="Attach files" disabled>
+                <ng-icon hlm size="sm" name="lucidePaperclip" />
+              </button>
+            </pk-prompt-input-action>
+            <pk-prompt-input-action tooltip="Voice input">
+              <button hlmBtn variant="ghost" size="icon-sm" type="button" aria-label="Voice input" disabled>
+                <ng-icon hlm size="sm" name="lucideMic" />
+              </button>
+            </pk-prompt-input-action>
+            <pk-token-counter
+              class="ml-2"
+              display="compact"
+              [text]="draft()"
+              [limit]="inputLimit"
+            />
+          </div>
+          <pk-prompt-input-action tooltip="Send message">
+            <button
+              hlmBtn
+              size="icon-sm"
+              type="button"
+              class="rounded-full"
+              aria-label="Send message"
+              [disabled]="!canSend()"
+              (click)="onSubmit()"
+            >
+              <ng-icon hlm size="xs" name="lucideArrowUp" />
+            </button>
+          </pk-prompt-input-action>
+        </pk-prompt-input-actions>
+      </pk-prompt-input>
+    </div>
+  </div>
+</section>

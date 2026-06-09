@@ -5,8 +5,8 @@ import { authInterceptor, provideAuth, withAppInitializerAuthCheck } from 'angul
 
 import { routes } from './app.routes';
 import { provideApi } from './api/provide-api';
-import { authLoaderProvider } from './auth/auth.config';
-import { environment } from './environments/environment';
+import { authLoaderProvider } from './shared/auth/auth.config';
+import { environment } from './shared/environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [

@@ -10,9 +10,9 @@
 
 
 export interface ChatDto { 
-    id?: string;
-    title?: string | null;
-    createdAt?: string;
-    updatedAt?: string;
+    id: string;
+    title: string;
+    createdAt: string;
+    updatedAt: string;
 }
 

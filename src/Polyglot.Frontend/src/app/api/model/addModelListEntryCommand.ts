@@ -11,7 +11,7 @@ import { ModelListType } from './modelListType';
 
 
 export interface AddModelListEntryCommand { 
-    modelId?: string | null;
+    modelId?: string;
     listType?: ModelListType;
 }
 export namespace AddModelListEntryCommand {

@@ -11,9 +11,9 @@ import { ModelListType } from './modelListType';
 
 
 export interface ModelListEntryDto { 
-    id?: string;
-    modelId?: string | null;
-    listType?: ModelListType;
+    id: string;
+    modelId: string;
+    listType: ModelListType;
 }
 export namespace ModelListEntryDto {
 }

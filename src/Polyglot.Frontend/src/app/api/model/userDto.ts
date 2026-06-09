@@ -11,13 +11,13 @@ import { UserRole } from './userRole';
 
 
 export interface UserDto { 
-    id?: string;
-    email?: string | null;
-    displayName?: string | null;
+    id: string;
+    email: string;
+    displayName: string;
     avatarUrl?: string | null;
-    role?: UserRole;
-    creditBalance?: number;
-    isLocked?: boolean;
+    role: UserRole;
+    creditBalance: number;
+    isLocked: boolean;
 }
 export namespace UserDto {
 }
