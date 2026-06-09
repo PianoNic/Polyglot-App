@@ -14,7 +14,7 @@ namespace Polyglot.Application.Command
 {
     public record SendMessageCommand(Guid? ChatId, string Message, string Model) : ICommand<Result<SendMessageDto>>;
 
-    public class SendMessageCommandHandler(IUserService userService, PolyglotDbContext dbContext, IChatClientFactory chatClientFactory, ICreditsService creditsService) : ICommandHandler<SendMessageCommand, Result<SendMessageDto>>
+    public class SendMessageCommandHandler(IUserService userService, PolyglotDbContext dbContext, IChatClientFactory chatClientFactory, ICreditsService creditsService, IChatTitleGenerator titleGenerator) : ICommandHandler<SendMessageCommand, Result<SendMessageDto>>
     {
         public async ValueTask<Result<SendMessageDto>> Handle(SendMessageCommand command, CancellationToken cancellationToken)
         {
@@ -113,7 +113,8 @@ namespace Polyglot.Application.Command
             chat.Messages.Add(assistantMessage);
             dbContext.Messages.Add(assistantMessage);
 
-            if (chat.Title == "New Chat" && nextSequence == 0)
+            var isFirstExchange = chat.Title == "New Chat" && nextSequence == 0;
+            if (isFirstExchange)
             {
                 chat.Title = command.Message.Length > 50
                     ? command.Message[..50] + "..."
@@ -121,6 +122,15 @@ namespace Polyglot.Application.Command
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);
+
+            if (isFirstExchange)
+            {
+                var placeholderTitle = chat.Title;
+                var chatId = chat.Id;
+                var userText = command.Message;
+                var assistantText = assistantMessage.Content;
+                _ = Task.Run(() => titleGenerator.GenerateAndSaveAsync(chatId, userText, assistantText, placeholderTitle));
+            }
 
             return Result<SendMessageDto>.Success(new SendMessageDto
             {

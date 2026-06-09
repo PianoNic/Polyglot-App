@@ -315,6 +315,7 @@ public class SendMessageCommandTests
             userService,
             db,
             chatClientFactory ?? FakeChatService("ok"),
-            creditsService ?? Substitute.For<ICreditsService>());
+            creditsService ?? Substitute.For<ICreditsService>(),
+            Substitute.For<IChatTitleGenerator>());
     }
 }
