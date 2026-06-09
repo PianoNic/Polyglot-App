@@ -40,9 +40,18 @@ services:
       OpenRouter__ApiKey: ${OPENROUTER_API_KEY:?OPENROUTER_API_KEY is required}
       OpenRouter__DefaultModel: ${OPENROUTER_DEFAULT_MODEL:-openai/gpt-5}
       Chat__TitleModel: ${CHAT_TITLE_MODEL:-mistralai/mistral-nemo}
+      Backup__Enabled: ${BACKUP_ENABLED:-true}
+      Backup__TimeOfDayUtc: ${BACKUP_TIME_OF_DAY_UTC:-03:00}
+      Backup__RetentionCount: ${BACKUP_RETENTION_COUNT:-14}
+      Backup__S3__Endpoint: http://rustfs:9000
+      Backup__S3__Bucket: ${BACKUP_S3_BUCKET:-polyglot-backups}
+      Backup__S3__AccessKey: ${RUSTFS_ACCESS_KEY:?RUSTFS_ACCESS_KEY is required}
+      Backup__S3__SecretKey: ${RUSTFS_SECRET_KEY:?RUSTFS_SECRET_KEY is required}
     depends_on:
       db:
         condition: service_healthy
+      rustfs:
+        condition: service_started
     networks:
       - internal
     healthcheck:
