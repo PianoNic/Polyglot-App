@@ -28,6 +28,28 @@ namespace Polyglot.Application.Command
             if (model is null)
                 return Result<SendMessageDto>.Failure($"Model '{command.Model}' not found");
 
+            var settings = await dbContext.AdminSettings.SingleAsync(cancellationToken);
+
+            if (settings.ActiveModelListMode == ModelListMode.Whitelist)
+            {
+                var isWhitelisted = await dbContext.ModelListEntries
+                    .AnyAsync(e => e.ListType == ModelListType.Whitelist && e.ModelId == command.Model, cancellationToken);
+                if (!isWhitelisted)
+                    return Result<SendMessageDto>.Failure($"Model '{command.Model}' is not available");
+            }
+            else if (settings.ActiveModelListMode == ModelListMode.Blacklist)
+            {
+                var isBlacklisted = await dbContext.ModelListEntries
+                    .AnyAsync(e => e.ListType == ModelListType.Blacklist && e.ModelId == command.Model, cancellationToken);
+                if (isBlacklisted)
+                    return Result<SendMessageDto>.Failure($"Model '{command.Model}' is not available");
+            }
+
+            if (settings.MaxPricePerMillionTokens is not null
+                && (model.PromptPricePerMillion > settings.MaxPricePerMillionTokens
+                    || model.CompletionPricePerMillion > settings.MaxPricePerMillionTokens))
+                return Result<SendMessageDto>.Failure($"Model '{command.Model}' is not available");
+
             Chat chat;
             if (command.ChatId is not null)
             {

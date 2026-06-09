@@ -243,6 +243,92 @@ public class SendMessageCommandTests
         await Assert.That(result.Error!).Contains("Chat not found");
     }
 
+    [Test]
+    public async Task Handle_WhitelistMode_ModelNotWhitelisted_Fails()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db);
+        var settings = await db.AdminSettings.SingleAsync();
+        settings.ActiveModelListMode = ModelListMode.Whitelist;
+        await db.SaveChangesAsync();
+        var handler = CreateHandler(db, user.Id);
+
+        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error!).Contains("not available");
+    }
+
+    [Test]
+    public async Task Handle_WhitelistMode_ModelWhitelisted_Succeeds()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db);
+        var settings = await db.AdminSettings.SingleAsync();
+        settings.ActiveModelListMode = ModelListMode.Whitelist;
+        db.ModelListEntries.Add(new ModelListEntry { ModelId = "gpt-4", ListType = ModelListType.Whitelist });
+        await db.SaveChangesAsync();
+        var handler = CreateHandler(db, user.Id, chatClientFactory: FakeChatService("Hi"));
+
+        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+
+        await Assert.That(result.IsSuccess).IsTrue();
+    }
+
+    [Test]
+    public async Task Handle_BlacklistMode_ModelBlacklisted_Fails()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db);
+        var settings = await db.AdminSettings.SingleAsync();
+        settings.ActiveModelListMode = ModelListMode.Blacklist;
+        db.ModelListEntries.Add(new ModelListEntry { ModelId = "gpt-4", ListType = ModelListType.Blacklist });
+        await db.SaveChangesAsync();
+        var handler = CreateHandler(db, user.Id);
+
+        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error!).Contains("not available");
+    }
+
+    [Test]
+    public async Task Handle_PriceCapExceeded_Fails()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db);
+        var settings = await db.AdminSettings.SingleAsync();
+        settings.MaxPricePerMillionTokens = 10m;
+        await db.SaveChangesAsync();
+        var handler = CreateHandler(db, user.Id);
+
+        // Model has CompletionPricePerMillion = 15 > cap of 10
+        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+
+        await Assert.That(result.IsFailure).IsTrue();
+        await Assert.That(result.Error!).Contains("not available");
+    }
+
+    [Test]
+    public async Task Handle_PriceCapNotExceeded_Succeeds()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db);
+        var settings = await db.AdminSettings.SingleAsync();
+        settings.MaxPricePerMillionTokens = 15m;
+        await db.SaveChangesAsync();
+        var handler = CreateHandler(db, user.Id, chatClientFactory: FakeChatService("Hi"));
+
+        var result = await handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None);
+
+        await Assert.That(result.IsSuccess).IsTrue();
+    }
+
     // --- Simple factory methods (no logic, just reduce repeated boilerplate) ---
 
     private static PolyglotDbContext CreateDb(string? name = null)
