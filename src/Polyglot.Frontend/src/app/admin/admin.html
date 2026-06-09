@@ -1,0 +1,236 @@
+<section class="flex min-h-0 flex-1 flex-col overflow-hidden">
+  <polyglot-content-header>
+    <span slot="left" class="text-sm font-medium">Admin</span>
+  </polyglot-content-header>
+
+  <div class="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+    <div class="mx-auto w-full max-w-5xl">
+      @if (error(); as err) {
+        <p class="text-destructive mb-4 text-sm">{{ err }}</p>
+      }
+
+      <hlm-tabs tab="users">
+        <hlm-tabs-list class="mb-4">
+          <button hlmTabsTrigger="users" type="button">Users</button>
+          <button hlmTabsTrigger="models" type="button">Models</button>
+          <button hlmTabsTrigger="settings" type="button">Settings</button>
+        </hlm-tabs-list>
+
+        <div hlmTabsContent="users">
+          <div hlmTableContainer>
+            <table hlmTable>
+              <thead hlmTHead>
+                <tr hlmTr>
+                  <th hlmTh>User</th>
+                  <th hlmTh>Role</th>
+                  <th hlmTh class="text-right">Credits</th>
+                  <th hlmTh>Status</th>
+                  <th hlmTh class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody hlmTBody>
+                @for (user of store.users(); track user.id) {
+                  <tr hlmTr>
+                    <td hlmTd>
+                      <div class="grid">
+                        <span class="font-medium">{{ user.displayName }}</span>
+                        <span class="text-muted-foreground text-xs">{{ user.email }}</span>
+                      </div>
+                    </td>
+                    <td hlmTd>{{ user.role }}</td>
+                    <td hlmTd class="text-right tabular-nums">{{ user.creditBalance | number }}</td>
+                    <td hlmTd>
+                      @if (user.isLocked) {
+                        <span hlmBadge variant="destructive">Locked</span>
+                      } @else {
+                        <span hlmBadge variant="secondary">Active</span>
+                      }
+                    </td>
+                    <td hlmTd class="text-right">
+                      <button hlmBtn variant="ghost" size="sm" type="button" (click)="openCreditEditor(user)">
+                        Credits
+                      </button>
+                      <button
+                        hlmBtn
+                        variant="ghost"
+                        size="icon-sm"
+                        type="button"
+                        [attr.aria-label]="user.isLocked ? 'Unlock user' : 'Lock user'"
+                        (click)="toggleLock(user)"
+                      >
+                        <ng-icon [name]="user.isLocked ? 'lucideLockOpen' : 'lucideLock'" size="16" />
+                      </button>
+                    </td>
+                  </tr>
+                  @if (creditUser()?.id === user.id) {
+                    <tr hlmTr>
+                      <td hlmTd colspan="5">
+                        <div class="flex flex-wrap items-end gap-3 py-1">
+                          <label hlmLabel class="grid gap-1 text-xs">
+                            Amount
+                            <input
+                              hlmInput
+                              type="number"
+                              class="w-36"
+                              [ngModel]="creditAmount()"
+                              (ngModelChange)="creditAmount.set($event)"
+                            />
+                          </label>
+                          <label hlmLabel class="grid gap-1 text-xs">
+                            Mode
+                            <hlm-native-select [ngModel]="creditMode()" (ngModelChange)="creditMode.set($event)">
+                              @for (mode of adjustModes; track mode) {
+                                <option hlmNativeSelectOption [value]="mode">{{ mode }}</option>
+                              }
+                            </hlm-native-select>
+                          </label>
+                          <button hlmBtn size="sm" type="button" (click)="applyCredits()">Apply</button>
+                          <button hlmBtn variant="ghost" size="sm" type="button" (click)="creditUser.set(null)">
+                            Cancel
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                } @empty {
+                  <tr hlmTr>
+                    <td hlmTd colspan="5" class="text-muted-foreground text-center">No users yet.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div hlmTabsContent="models">
+          <div class="mb-4 flex flex-wrap items-end gap-3">
+            <label hlmLabel class="grid gap-1 text-xs">
+              Model id
+              <input
+                hlmInput
+                type="text"
+                class="w-72"
+                placeholder="provider/model-id"
+                list="admin-model-ids"
+                [ngModel]="newEntryModelId()"
+                (ngModelChange)="newEntryModelId.set($event)"
+              />
+            </label>
+            <datalist id="admin-model-ids">
+              @for (model of store.allModels(); track model.id) {
+                <option [value]="model.id">{{ model.name }}</option>
+              }
+            </datalist>
+            <label hlmLabel class="grid gap-1 text-xs">
+              List
+              <hlm-native-select [ngModel]="newEntryType()" (ngModelChange)="newEntryType.set($event)">
+                <option hlmNativeSelectOption [value]="ListType.Whitelist">Whitelist</option>
+                <option hlmNativeSelectOption [value]="ListType.Blacklist">Blacklist</option>
+              </hlm-native-select>
+            </label>
+            <button hlmBtn size="sm" type="button" (click)="addEntry()">
+              <ng-icon name="lucidePlus" size="16" />
+              Add
+            </button>
+          </div>
+
+          <div hlmTableContainer>
+            <table hlmTable>
+              <thead hlmTHead>
+                <tr hlmTr>
+                  <th hlmTh>Model id</th>
+                  <th hlmTh>List</th>
+                  <th hlmTh class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody hlmTBody>
+                @for (entry of store.listEntries(); track entry.id) {
+                  <tr hlmTr>
+                    <td hlmTd class="font-mono text-xs">{{ entry.modelId }}</td>
+                    <td hlmTd>
+                      <span hlmBadge [variant]="entry.listType === ListType.Whitelist ? 'secondary' : 'destructive'">
+                        {{ entry.listType }}
+                      </span>
+                    </td>
+                    <td hlmTd class="text-right">
+                      <button
+                        hlmBtn
+                        variant="ghost"
+                        size="icon-sm"
+                        type="button"
+                        aria-label="Remove entry"
+                        (click)="removeEntry(entry.id)"
+                      >
+                        <ng-icon name="lucideTrash2" size="16" />
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr hlmTr>
+                    <td hlmTd colspan="3" class="text-muted-foreground text-center">
+                      No whitelist or blacklist entries.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div hlmTabsContent="settings">
+          <div class="grid max-w-md gap-4">
+            <label hlmLabel class="grid gap-1 text-xs">
+              Active model list mode
+              <hlm-native-select
+                [ngModel]="settingsDraft().activeModelListMode"
+                (ngModelChange)="patchDraft({ activeModelListMode: $event })"
+              >
+                @for (mode of listModes; track mode) {
+                  <option hlmNativeSelectOption [value]="mode">{{ mode }}</option>
+                }
+              </hlm-native-select>
+            </label>
+            <label hlmLabel class="grid gap-1 text-xs">
+              Max price per million tokens (empty = no cap)
+              <input
+                hlmInput
+                type="number"
+                [ngModel]="settingsDraft().maxPricePerMillionTokens"
+                (ngModelChange)="patchDraft({ maxPricePerMillionTokens: $event === '' || $event === null ? null : $event })"
+              />
+            </label>
+            <label hlmLabel class="grid gap-1 text-xs">
+              Starting balance for new users
+              <input
+                hlmInput
+                type="number"
+                [ngModel]="settingsDraft().startingBalance"
+                (ngModelChange)="patchDraft({ startingBalance: $event })"
+              />
+            </label>
+            <label hlmLabel class="grid gap-1 text-xs">
+              Cost multiplier
+              <input
+                hlmInput
+                type="number"
+                step="0.01"
+                [ngModel]="settingsDraft().costMultiplier"
+                (ngModelChange)="patchDraft({ costMultiplier: $event })"
+              />
+            </label>
+            <label hlmLabel class="grid gap-1 text-xs">
+              Credits per USD
+              <input
+                hlmInput
+                type="number"
+                [ngModel]="settingsDraft().creditsPerUsd"
+                (ngModelChange)="patchDraft({ creditsPerUsd: $event })"
+              />
+            </label>
+            <button hlmBtn type="button" class="w-fit" (click)="saveSettings()">Save settings</button>
+          </div>
+        </div>
+      </hlm-tabs>
+    </div>
+  </div>
+</section>

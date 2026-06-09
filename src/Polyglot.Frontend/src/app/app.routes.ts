@@ -12,6 +12,7 @@ export const routes: Routes = [
     children: [
       { path: 'chat', component: Chat },
       { path: 'chat/:id', component: Chat },
+      { path: 'admin', loadComponent: () => import('./admin/admin').then((m) => m.Admin) },
     ],
   },
   { path: '**', redirectTo: 'chat' },
