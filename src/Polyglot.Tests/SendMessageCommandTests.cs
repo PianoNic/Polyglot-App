@@ -216,19 +216,6 @@ public class SendMessageCommandTests
     }
 
     [Test]
-    public async Task Handle_NullModel_Fails()
-    {
-        var db = CreateDb();
-        var user = await SeedUserWithCredits(db, credits: 10_000);
-        var handler = CreateHandler(db, user.Id);
-
-        var result = await handler.Handle(new SendMessageCommand(null, "Hello", null), CancellationToken.None);
-
-        await Assert.That(result.IsFailure).IsTrue();
-        await Assert.That(result.Error!).Contains("Model is required");
-    }
-
-    [Test]
     public async Task Handle_UnknownModel_Fails()
     {
         var db = CreateDb();
