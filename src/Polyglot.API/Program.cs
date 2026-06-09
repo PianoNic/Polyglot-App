@@ -61,6 +61,7 @@ builder.Services.AddDbContext<PolyglotDbContext>(options =>
 builder.Services.AddHttpClient();
 builder.Services.AddAgentFramework(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHealthChecks();
 
 // CORS
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
@@ -119,5 +120,6 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/healthz").AllowAnonymous();
 
 app.Run();
