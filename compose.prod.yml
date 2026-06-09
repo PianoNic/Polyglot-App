@@ -1,0 +1,118 @@
+name: polyglot
+
+# Production stack. Pangolin (running separately on the VPS) terminates TLS and
+# proxies the public domains to `frontend` (app) and `pocket-id` (auth) over the
+# external network. nginx in `frontend` proxies /api to the backend, so the SPA
+# and API share one origin.
+#
+# Copy .env.example to .env and fill in the secrets before `docker compose up`.
+
+services:
+  frontend:
+    build:
+      context: ./src/Polyglot.Frontend
+    container_name: polyglot-frontend
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - internal
+      - pangolin
+
+  api:
+    build:
+      context: ./src
+      dockerfile: Polyglot.API/Dockerfile
+    container_name: polyglot-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__PolyglotDatabase: Host=db;Port=5432;Database=${POSTGRES_DB:-polyglot};Username=postgres;Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      Oidc__Authority: ${OIDC_AUTHORITY:?OIDC_AUTHORITY is required}
+      Oidc__ClientId: ${OIDC_CLIENT_ID:?OIDC_CLIENT_ID is required}
+      Oidc__RequireHttpsMetadata: "true"
+      Oidc__RedirectUri: ${PUBLIC_URL:?PUBLIC_URL is required}/
+      Oidc__PostLogoutRedirectUri: ${PUBLIC_URL}
+      Oidc__Scope: openid profile email roles
+      Cors__AllowedOrigins__0: ${PUBLIC_URL}
+      OpenRouter__ApiKey: ${OPENROUTER_API_KEY:?OPENROUTER_API_KEY is required}
+      OpenRouter__DefaultModel: ${OPENROUTER_DEFAULT_MODEL:-openai/gpt-5}
+      Chat__TitleModel: ${CHAT_TITLE_MODEL:-mistralai/mistral-nemo}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+    healthcheck:
+      # The aspnet base image ships no curl/wget; bash with /dev/tcp does the job.
+      test:
+        [
+          "CMD",
+          "bash",
+          "-c",
+          "exec 3<>/dev/tcp/localhost/8080 && printf 'GET /healthz HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '200 OK' <&3",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  db:
+    image: postgres:18.3
+    container_name: polyglot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-polyglot}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB:-polyglot}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pocket-id:
+    image: ghcr.io/pocket-id/pocket-id:v1
+    container_name: polyglot-pocket-id
+    restart: unless-stopped
+    environment:
+      APP_URL: ${OIDC_AUTHORITY:?OIDC_AUTHORITY is required}
+      TRUST_PROXY: "true"
+    volumes:
+      - pocket-id-data:/app/data
+    networks:
+      - internal
+      - pangolin
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:1411/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: polyglot-rustfs
+    restart: unless-stopped
+    environment:
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:?RUSTFS_ACCESS_KEY is required}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:?RUSTFS_SECRET_KEY is required}
+    volumes:
+      - rustfs-data:/data
+    networks:
+      - internal
+
+volumes:
+  postgres-data:
+  pocket-id-data:
+  rustfs-data:
+
+networks:
+  internal:
+  pangolin:
+    external: true
+    name: ${PANGOLIN_NETWORK:-pangolin}

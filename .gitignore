@@ -392,3 +392,6 @@ FodyWeavers.xsd
 
 # Playwright MCP debug captures
 .playwright-mcp/
+
+# Production compose secrets
+.env
