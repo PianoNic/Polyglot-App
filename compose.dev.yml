@@ -23,7 +23,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./keycloak/polyglot-realm.json:/opt/keycloak/data/import/polyglot-realm.json:ro
+      - ./keycloak/realms:/opt/keycloak/data/import:ro
       - keycloak-data-dev:/opt/keycloak/data
 
 volumes:
