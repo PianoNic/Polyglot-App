@@ -402,13 +402,13 @@ function consumeSseFrames(
 function describeError(err: unknown): string {
   if (err instanceof HttpErrorResponse) {
     if (err.status === 0)
-      return 'Network error — check your connection and try again.';
+      return 'Network error. Check your connection and try again.';
     if (err.status === 401)
       return 'Your session expired. Sign in again to continue.';
     if (err.status === 402 || err.status === 403)
       return 'Out of credits or not authorized for this model.';
     if (err.status === 429)
-      return 'Rate limited — please wait a moment and retry.';
+      return 'Rate limited. Please wait a moment and retry.';
     if (err.status >= 500)
       return 'The server hit an error. Try again in a moment.';
     const detail = (err.error as { detail?: string; title?: string } | null) ?? null;
