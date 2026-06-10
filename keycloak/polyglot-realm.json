@@ -363,7 +363,7 @@
     "containerId" : "bc1a14a6-f177-4755-906c-902ef9aa82a5"
   },
   "requiredCredentials" : [ "password" ],
-  "passwordPolicy" : "passwordBlacklist(top100k.txt)",
+  "passwordPolicy" : "passwordBlacklist(rockyou.txt)",
   "otpPolicyType" : "totp",
   "otpPolicyAlgorithm" : "HmacSHA1",
   "otpPolicyInitialCounter" : 0,
@@ -2155,5 +2155,4 @@
   "clientPolicies" : {
     "policies" : [ ]
   }
-
 }
