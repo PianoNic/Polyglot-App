@@ -76,6 +76,10 @@
                   <ng-icon name="lucideCoins" />
                   Buy tokens
                 </button>
+                <button hlmDropdownMenuItem (click)="creditsInfoState.set('open')">
+                  <ng-icon name="lucideInfo" />
+                  How credits work
+                </button>
               </hlm-dropdown-menu-group>
 
               <hlm-dropdown-menu-separator />
@@ -106,4 +110,19 @@
   </hlm-sidebar>
 
   <ng-content></ng-content>
+
+  <hlm-dialog [state]="creditsInfoState()" (stateChanged)="creditsInfoState.set($event)">
+    <hlm-dialog-content class="max-w-sm" *hlmDialogPortal>
+      <hlm-dialog-header>
+        <h3 hlmDialogTitle>How credits work</h3>
+      </hlm-dialog-header>
+      @if (appInfo(); as app) {
+        <ul class="text-muted-foreground grid gap-2 text-sm">
+          <li>{{ app.creditsPerUsd | number }} credits equal 1 USD.</li>
+          <li>Each message costs credits based on the selected model's token prices.</li>
+          <li>New accounts start with {{ app.startingBalance | number }} credits.</li>
+        </ul>
+      }
+    </hlm-dialog-content>
+  </hlm-dialog>
 </div>

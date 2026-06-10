@@ -8,4 +8,6 @@ public record AppDto
     public required string PostLogoutRedirectUri { get; init; }
     public required string Scope { get; init; }
     public required string Version { get; init; }
+    public required decimal CreditsPerUsd { get; init; }
+    public required long StartingBalance { get; init; }
 }
