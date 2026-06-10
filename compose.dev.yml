@@ -12,7 +12,7 @@ services:
       - postgres-data-dev:/var/lib/postgresql
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.6
+    build: ./keycloak
     container_name: polyglot-keycloak-dev
     restart: unless-stopped
     command: start-dev --import-realm
@@ -24,7 +24,6 @@ services:
       - "8080:8080"
     volumes:
       - ./keycloak/polyglot-realm.json:/opt/keycloak/data/import/polyglot-realm.json:ro
-      - ./keycloak/keycloakify/dist_keycloak/keycloak-theme-for-kc-all-other-versions.jar:/opt/keycloak/providers/polyglot-keycloak-theme.jar:ro
       - keycloak-data-dev:/opt/keycloak/data
 
 volumes:
