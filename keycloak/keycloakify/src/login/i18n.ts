@@ -6,8 +6,7 @@ const { I18nProvider, useI18n } = i18nBuilder
     .withThemeName<ThemeName>()
     .withCustomTranslations({
         en: {
-            welcomeMessage:
-                "Polyglot — universal AI chat across every model.",
+            welcomeMessage: "Universal AI chat across every model.",
             loginAccountTitle: "Login to your account",
             registerTitle: "Register a new account",
             email: "Email",
