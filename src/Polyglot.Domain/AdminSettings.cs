@@ -13,7 +13,7 @@ namespace Polyglot.Domain
 
         public decimal? MaxPricePerMillionTokens { get; set; }
         public ModelListMode ActiveModelListMode { get; set; } = ModelListMode.None;
-        public long StartingBalance { get; set; } = 0;
+        public long StartingBalance { get; set; } = 10_000;
         public decimal CostMultiplier { get; set; } = 1.0m;
         public decimal CreditsPerUsd { get; set; } = 10_000m;
     }
