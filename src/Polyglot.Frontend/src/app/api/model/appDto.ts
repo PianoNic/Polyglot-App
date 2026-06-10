@@ -16,5 +16,7 @@ export interface AppDto {
     postLogoutRedirectUri: string;
     scope: string;
     version: string;
+    creditsPerUsd: number;
+    startingBalance: number;
 }
 
