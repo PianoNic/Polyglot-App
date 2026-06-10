@@ -69,19 +69,11 @@
       "description" : "${role_default-roles}",
       "composite" : true,
       "composites" : {
-        "realm" : [ "offline_access", "uma_authorization", "user" ],
+        "realm" : [ "uma_authorization", "user" ],
         "client" : {
           "account" : [ "manage-account", "view-profile" ]
         }
       },
-      "clientRole" : false,
-      "containerId" : "f587ebd0-69d0-4947-b806-d71913506270",
-      "attributes" : { }
-    }, {
-      "id" : "d95df878-7495-4df2-9728-045d4251bba2",
-      "name" : "offline_access",
-      "description" : "${role_offline-access}",
-      "composite" : false,
       "clientRole" : false,
       "containerId" : "f587ebd0-69d0-4947-b806-d71913506270",
       "attributes" : { }
@@ -363,7 +355,7 @@
     "containerId" : "f587ebd0-69d0-4947-b806-d71913506270"
   },
   "requiredCredentials" : [ "password" ],
-  "passwordPolicy" : "passwordBlacklist(rockyou.txt)",
+  "passwordPolicy" : "passwordBlacklist(rockyou.txt) and notUsername(undefined) and notEmail(undefined) and notContainsUsername(undefined) and length(8)",
   "otpPolicyType" : "totp",
   "otpPolicyAlgorithm" : "HmacSHA1",
   "otpPolicyInitialCounter" : 0,
@@ -395,10 +387,6 @@
   "webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister" : false,
   "webAuthnPolicyPasswordlessAcceptableAaguids" : [ ],
   "webAuthnPolicyPasswordlessExtraOrigins" : [ ],
-  "scopeMappings" : [ {
-    "clientScope" : "offline_access",
-    "roles" : [ "offline_access" ]
-  } ],
   "clientScopeMappings" : {
     "account" : [ {
       "client" : "account-console",
@@ -435,7 +423,7 @@
     "fullScopeAllowed" : false,
     "nodeReRegistrationTimeout" : 0,
     "defaultClientScopes" : [ "web-origins", "acr", "profile", "roles", "basic", "email" ],
-    "optionalClientScopes" : [ "address", "phone", "offline_access", "organization", "microprofile-jwt" ]
+    "optionalClientScopes" : [ "address", "phone", "organization", "microprofile-jwt" ]
   }, {
     "id" : "4983dc45-7a41-41fd-9144-40d6358a0792",
     "clientId" : "account-console",
@@ -475,7 +463,7 @@
       "config" : { }
     } ],
     "defaultClientScopes" : [ "web-origins", "acr", "profile", "roles", "basic", "email" ],
-    "optionalClientScopes" : [ "address", "phone", "offline_access", "organization", "microprofile-jwt" ]
+    "optionalClientScopes" : [ "address", "phone", "organization", "microprofile-jwt" ]
   }, {
     "id" : "0beadc22-8b72-4b9c-9710-2396a604a095",
     "clientId" : "admin-cli",
@@ -504,7 +492,7 @@
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : 0,
     "defaultClientScopes" : [ "web-origins", "acr", "profile", "roles", "basic", "email" ],
-    "optionalClientScopes" : [ "address", "phone", "offline_access", "organization", "microprofile-jwt" ]
+    "optionalClientScopes" : [ "address", "phone", "organization", "microprofile-jwt" ]
   }, {
     "id" : "772aeb3e-2297-4da0-bb54-4b099fc29b1e",
     "clientId" : "broker",
@@ -532,7 +520,7 @@
     "fullScopeAllowed" : false,
     "nodeReRegistrationTimeout" : 0,
     "defaultClientScopes" : [ "web-origins", "acr", "profile", "roles", "basic", "email" ],
-    "optionalClientScopes" : [ "address", "phone", "offline_access", "organization", "microprofile-jwt" ]
+    "optionalClientScopes" : [ "address", "phone", "organization", "microprofile-jwt" ]
   }, {
     "id" : "d6292d0c-7911-4c7f-826e-c7a6d4146c61",
     "clientId" : "polyglot",
@@ -573,7 +561,7 @@
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : -1,
     "defaultClientScopes" : [ "web-origins", "acr", "profile", "roles", "basic", "email" ],
-    "optionalClientScopes" : [ "address", "phone", "offline_access", "organization", "microprofile-jwt" ]
+    "optionalClientScopes" : [ "address", "phone", "organization", "microprofile-jwt" ]
   }, {
     "id" : "4117f927-36c1-4026-81d6-1a05900841dc",
     "clientId" : "realm-management",
@@ -601,7 +589,7 @@
     "fullScopeAllowed" : false,
     "nodeReRegistrationTimeout" : 0,
     "defaultClientScopes" : [ "web-origins", "acr", "profile", "roles", "basic", "email" ],
-    "optionalClientScopes" : [ "address", "phone", "offline_access", "organization", "microprofile-jwt" ]
+    "optionalClientScopes" : [ "address", "phone", "organization", "microprofile-jwt" ]
   }, {
     "id" : "ec58880e-1361-4a57-abec-21f9e4f9d926",
     "clientId" : "security-admin-console",
@@ -650,7 +638,7 @@
       }
     } ],
     "defaultClientScopes" : [ "web-origins", "acr", "profile", "roles", "basic", "email" ],
-    "optionalClientScopes" : [ "address", "phone", "offline_access", "organization", "microprofile-jwt" ]
+    "optionalClientScopes" : [ "address", "phone", "organization", "microprofile-jwt" ]
   } ],
   "clientScopes" : [ {
     "id" : "3a86b45d-ceab-4ccc-96bb-2b5ddbcb80b2",
@@ -1067,15 +1055,6 @@
       }
     } ]
   }, {
-    "id" : "1367a84a-599a-4bfb-b348-77a3d456fe1f",
-    "name" : "offline_access",
-    "description" : "OpenID Connect built-in scope: offline_access",
-    "protocol" : "openid-connect",
-    "attributes" : {
-      "consent.screen.text" : "${offlineAccessScopeConsentText}",
-      "display.on.consent.screen" : "true"
-    }
-  }, {
     "id" : "f16c0935-f6d0-4e53-9082-be41a73edd0b",
     "name" : "basic",
     "description" : "OpenID Connect scope for add all basic claims to the token",
@@ -1274,7 +1253,7 @@
     } ]
   } ],
   "defaultDefaultClientScopes" : [ "role_list", "saml_organization", "profile", "email", "roles", "web-origins", "acr", "basic" ],
-  "defaultOptionalClientScopes" : [ "offline_access", "address", "phone", "microprofile-jwt", "organization" ],
+  "defaultOptionalClientScopes" : [ "address", "phone", "microprofile-jwt", "organization" ],
   "browserSecurityHeaders" : {
     "contentSecurityPolicyReportOnly" : "",
     "xContentTypeOptions" : "nosniff",
