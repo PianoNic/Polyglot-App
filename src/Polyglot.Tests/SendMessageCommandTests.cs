@@ -438,6 +438,35 @@ public class SendMessageCommandTests
     }
 
     [Test]
+    public async Task Handle_WebSearchEnabled_UsesOnlineModelVariant()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db);
+        var factory = FakeStreamingClient("Hi");
+        var handler = CreateHandler(db, user.Id, chatClientFactory: factory);
+
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4", WebSearchEnabled: true), CancellationToken.None));
+
+        await Assert.That(events[^1]).IsTypeOf<ChatStreamDone>();
+        factory.Received(1).Create("gpt-4:online");
+    }
+
+    [Test]
+    public async Task Handle_WebSearchDisabled_UsesBaseModel()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db);
+        var factory = FakeStreamingClient("Hi");
+        var handler = CreateHandler(db, user.Id, chatClientFactory: factory);
+
+        await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
+
+        factory.Received(1).Create("gpt-4");
+    }
+
+    [Test]
     public async Task Handle_UnknownAttachment_EmitsError()
     {
         var db = CreateDb();

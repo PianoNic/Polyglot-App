@@ -40,6 +40,7 @@ type ChatStoreState = {
   messages: MessageDto[];
   models: AvailableModelDto[];
   selectedModelId: string | null;
+  webSearchEnabled: boolean;
   isSending: boolean;
   streamingText: string;
   streamDone: boolean;
@@ -57,6 +58,7 @@ export const initialChatStore: ChatStoreState = {
   messages: [],
   models: [],
   selectedModelId: readPersistedModel(),
+  webSearchEnabled: false,
   isSending: false,
   streamingText: '',
   streamDone: false,
@@ -129,6 +131,10 @@ export const ChatStore = signalStore(
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem(SELECTED_MODEL_KEY, id);
       }
+    }
+
+    function toggleWebSearch(): void {
+      patchState(store, { webSearchEnabled: !store.webSearchEnabled() });
     }
 
     async function loadModels(): Promise<void> {
@@ -212,6 +218,7 @@ export const ChatStore = signalStore(
               message: trimmed,
               model,
               attachmentIds: attachments.map((a) => a.id),
+              webSearchEnabled: store.webSearchEnabled(),
             },
             'events',
             true,
@@ -312,6 +319,7 @@ export const ChatStore = signalStore(
       openChat,
       newChat,
       setSelectedModel,
+      toggleWebSearch,
       sendMessage,
       commitStream,
       clearSendError,

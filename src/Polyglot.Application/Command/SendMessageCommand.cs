@@ -13,7 +13,7 @@ using Polyglot.Infrastructure.Services;
 
 namespace Polyglot.Application.Command
 {
-    public record SendMessageCommand(Guid? ChatId, string Message, string Model, List<Guid>? AttachmentIds = null) : IStreamCommand<ChatStreamEvent>;
+    public record SendMessageCommand(Guid? ChatId, string Message, string Model, List<Guid>? AttachmentIds = null, bool WebSearchEnabled = false) : IStreamCommand<ChatStreamEvent>;
 
     public abstract record ChatStreamEvent;
     public sealed record ChatStreamChunk(string Text) : ChatStreamEvent;
@@ -32,7 +32,9 @@ namespace Polyglot.Application.Command
             }
 
             var ctx = preflight.Context!;
-            var chatClient = chatClientFactory.Create(command.Model);
+            // OpenRouter's ":online" suffix attaches its web plugin to the request;
+            // validation and pricing stay keyed to the base model id.
+            var chatClient = chatClientFactory.Create(command.WebSearchEnabled ? $"{command.Model}:online" : command.Model);
 
             var assistantContent = new StringBuilder();
             UsageDetails? usage = null;

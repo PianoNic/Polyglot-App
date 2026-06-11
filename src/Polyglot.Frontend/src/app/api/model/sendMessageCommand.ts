@@ -14,5 +14,6 @@ export interface SendMessageCommand {
     message?: string;
     model?: string;
     attachmentIds?: Array<string> | null;
+    webSearchEnabled?: boolean;
 }
 
