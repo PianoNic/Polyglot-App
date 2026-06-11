@@ -56,6 +56,8 @@ namespace Polyglot.API.Controllers
                 yield return evt switch
                 {
                     ChatStreamChunk c => new SseItem<ChatStreamPayload>(new ChatStreamPayload(ChatStreamPayloadType.Chunk, Text: c.Text), "chunk"),
+                    ChatStreamToolCall tc => new SseItem<ChatStreamPayload>(new ChatStreamPayload(ChatStreamPayloadType.ToolCall, ToolName: tc.Name, ToolInput: tc.Input), "tool-call"),
+                    ChatStreamToolResult tr => new SseItem<ChatStreamPayload>(new ChatStreamPayload(ChatStreamPayloadType.ToolResult, ToolName: tr.Name, ToolOutput: tr.Output), "tool-result"),
                     ChatStreamDone d => new SseItem<ChatStreamPayload>(new ChatStreamPayload(ChatStreamPayloadType.Done, Result: d.Result), "done"),
                     ChatStreamError e => new SseItem<ChatStreamPayload>(new ChatStreamPayload(ChatStreamPayloadType.Error, Error: e.Message), "error"),
                     _ => throw new InvalidOperationException($"Unknown stream event: {evt.GetType().Name}"),
@@ -93,12 +95,14 @@ namespace Polyglot.API.Controllers
     /// payload itself (not only in the SSE event name) so the same schema works
     /// over any transport, e.g. WebSockets.
     /// </summary>
-    public sealed record ChatStreamPayload(ChatStreamPayloadType Type, string? Text = null, SendMessageDto? Result = null, string? Error = null);
+    public sealed record ChatStreamPayload(ChatStreamPayloadType Type, string? Text = null, SendMessageDto? Result = null, string? Error = null, string? ToolName = null, string? ToolInput = null, string? ToolOutput = null);
 
     public enum ChatStreamPayloadType
     {
         Chunk,
         Done,
         Error,
+        ToolCall,
+        ToolResult,
     }
 }

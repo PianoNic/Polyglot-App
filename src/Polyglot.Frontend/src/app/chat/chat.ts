@@ -21,11 +21,14 @@ import { HlmIcon } from '@spartan-ng/helm/icon';
 import { HlmPopoverImports } from '@spartan-ng/helm/popover';
 import { MessageRole } from '../api/model/messageRole';
 import type { AttachmentDto } from '../api/model/attachmentDto';
+import type { MessageDto } from '../api/model/messageDto';
 import { BASE_PATH } from '../api/variables';
 import { ContentHeader } from '../shared/components/content-header/content-header';
 import { PkAttachmentChip } from '../../../libs/prompt-kit/attachment-preview';
 import type { Attachment } from '../../../libs/prompt-kit/attachment-preview';
+import { PkChainOfThoughtImports } from '../../../libs/prompt-kit/chain-of-thought';
 import { PkChatContainerImports } from '../../../libs/prompt-kit/chat-container';
+import { PkCodeBlockImports } from '../../../libs/prompt-kit/code-block';
 import { PkChatEmpty } from '../../../libs/prompt-kit/chat-empty/pk-chat-empty';
 import type { ChatEmptySuggestion } from '../../../libs/prompt-kit/chat-empty/pk-chat-empty';
 import { PkLoader } from '../../../libs/prompt-kit/loader/pk-loader';
@@ -37,6 +40,7 @@ import { PkScrollButton } from '../../../libs/prompt-kit/scroll-button/pk-scroll
 import { PkSystemMessage } from '../../../libs/prompt-kit/system-message/pk-system-message';
 import { PkTokenCounter } from '../../../libs/prompt-kit/token-counter/pk-token-counter';
 import { ChatStore } from '../shared/stores/ChatStore.store';
+import type { ToolStep } from '../shared/stores/ChatStore.store';
 
 const SUGGESTIONS: ChatEmptySuggestion[] = [
   { label: 'Explain a concept', icon: 'lucideLightbulb', prompt: 'Explain how OAuth 2.0 works.' },
@@ -53,7 +57,9 @@ const SUGGESTIONS: ChatEmptySuggestion[] = [
     NgIcon,
     HlmButton,
     HlmIcon,
+    PkChainOfThoughtImports,
     PkChatContainerImports,
+    PkCodeBlockImports,
     PkChatEmpty,
     PkLoader,
     PkMessageImports,
@@ -195,6 +201,34 @@ export class Chat implements OnInit {
       await this.store.uploadAttachment(file);
     }
     input.value = '';
+  }
+
+  /** Parsed Message.toolCalls JSON, cached per message id. */
+  private readonly toolStepsCache = new Map<string, ToolStep[]>();
+
+  protected toolSteps(m: MessageDto): ToolStep[] {
+    if (!m.toolCalls) return [];
+    let steps = this.toolStepsCache.get(m.id);
+    if (!steps) {
+      try {
+        steps = JSON.parse(m.toolCalls) as ToolStep[];
+      } catch {
+        steps = [];
+      }
+      this.toolStepsCache.set(m.id, steps);
+    }
+    return steps;
+  }
+
+  /** The executed code for execute_javascript steps, else the raw input JSON. */
+  protected toolInput(step: ToolStep): string {
+    try {
+      const args = JSON.parse(step.input) as Record<string, unknown>;
+      if (typeof args['code'] === 'string') return args['code'];
+    } catch {
+      // fall through to raw input
+    }
+    return step.input;
   }
 
   protected asChip(a: AttachmentDto): Attachment {
