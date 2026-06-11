@@ -143,6 +143,21 @@
               [accept]="acceptTypes()"
               (change)="onFilesSelected($event)"
             />
+            <pk-prompt-input-action tooltip="Search the web">
+              <button
+                hlmBtn
+                variant="ghost"
+                size="icon-sm"
+                type="button"
+                aria-label="Search the web"
+                [attr.aria-pressed]="store.webSearchEnabled()"
+                [class.text-primary]="store.webSearchEnabled()"
+                [class.bg-accent]="store.webSearchEnabled()"
+                (click)="store.toggleWebSearch()"
+              >
+                <ng-icon hlm size="sm" name="lucideGlobe" />
+              </button>
+            </pk-prompt-input-action>
             <pk-prompt-input-action tooltip="Voice input">
               <button hlmBtn variant="ghost" size="icon-sm" type="button" aria-label="Voice input" disabled>
                 <ng-icon hlm size="sm" name="lucideMic" />

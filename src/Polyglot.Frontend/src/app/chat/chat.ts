@@ -14,6 +14,7 @@ import {
   lucidePaperclip,
   lucideMic,
   lucideChevronDown,
+  lucideGlobe,
 } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmIcon } from '@spartan-ng/helm/icon';
@@ -76,6 +77,7 @@ const SUGGESTIONS: ChatEmptySuggestion[] = [
       lucidePaperclip,
       lucideMic,
       lucideChevronDown,
+      lucideGlobe,
     }),
   ],
   templateUrl: './chat.html',
