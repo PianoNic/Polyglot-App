@@ -78,6 +78,7 @@ builder.Services.AddScoped<IOidcService, OidcService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IOpenRouterClient, OpenRouterClient>();
 builder.Services.AddScoped<ICreditsService, CreditsService>();
+builder.Services.AddSingleton<IJsExecutionService>(_ => new JsExecutionService());
 builder.Services.AddSingleton<IChatTitleGenerator, ChatTitleGenerator>();
 builder.Services.AddHostedServices();
 

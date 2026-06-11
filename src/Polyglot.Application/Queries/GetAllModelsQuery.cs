@@ -22,6 +22,7 @@ namespace Polyglot.Application.Queries
                     ContextLength = m.ContextLength,
                     InputModalities = m.InputModalities,
                     OutputModalities = m.OutputModalities,
+                    SupportedParameters = m.SupportedParameters,
                     InputPricePer1M = m.PromptPricePerMillion,
                     OutputPricePer1M = m.CompletionPricePerMillion,
                 })

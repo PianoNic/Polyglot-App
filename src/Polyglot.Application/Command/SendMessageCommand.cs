@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Mediator;
@@ -20,7 +21,7 @@ namespace Polyglot.Application.Command
     public sealed record ChatStreamDone(SendMessageDto Result) : ChatStreamEvent;
     public sealed record ChatStreamError(string Message) : ChatStreamEvent;
 
-    public class SendMessageCommandHandler(IUserService userService, PolyglotDbContext dbContext, IChatClientFactory chatClientFactory, ICreditsService creditsService, IChatTitleGenerator titleGenerator) : IStreamCommandHandler<SendMessageCommand, ChatStreamEvent>
+    public class SendMessageCommandHandler(IUserService userService, PolyglotDbContext dbContext, IChatClientFactory chatClientFactory, ICreditsService creditsService, IChatTitleGenerator titleGenerator, IJsExecutionService jsExecutionService) : IStreamCommandHandler<SendMessageCommand, ChatStreamEvent>
     {
         public async IAsyncEnumerable<ChatStreamEvent> Handle(SendMessageCommand command, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
@@ -41,7 +42,12 @@ namespace Polyglot.Application.Command
             ChatFinishReason? finishReason = null;
             string? streamError = null;
 
-            var stream = chatClient.GetStreamingResponseAsync(ctx.Messages, cancellationToken: cancellationToken);
+            // Tool gating: only models that advertise tool support get tools attached.
+            ChatOptions? chatOptions = null;
+            if (ctx.Model.SupportedParameters.Contains("tools"))
+                chatOptions = new ChatOptions { Tools = [CreateJsExecutionTool()] };
+
+            var stream = chatClient.GetStreamingResponseAsync(ctx.Messages, chatOptions, cancellationToken);
             await using var updates = stream.GetAsyncEnumerator(cancellationToken);
             while (true)
             {
@@ -74,7 +80,17 @@ namespace Polyglot.Application.Command
                             yield return new ChatStreamChunk(text);
                             break;
                         case UsageContent uc:
-                            usage = uc.Details;
+                            // Tool calls produce one completion per loop turn; bill them all.
+                            if (usage is null)
+                            {
+                                usage = uc.Details;
+                            }
+                            else
+                            {
+                                usage.InputTokenCount = (usage.InputTokenCount ?? 0) + (uc.Details.InputTokenCount ?? 0);
+                                usage.OutputTokenCount = (usage.OutputTokenCount ?? 0) + (uc.Details.OutputTokenCount ?? 0);
+                                usage.TotalTokenCount = (usage.TotalTokenCount ?? 0) + (uc.Details.TotalTokenCount ?? 0);
+                            }
                             break;
                     }
                 }
@@ -277,6 +293,21 @@ namespace Polyglot.Application.Command
                 AssistantMessage = assistantMessage.ToDto(),
             };
         }
+
+        private AIFunction CreateJsExecutionTool() =>
+            AIFunctionFactory.Create(
+                ([Description("The JavaScript source code to run.")] string code) =>
+                {
+                    var result = jsExecutionService.Execute(code);
+                    if (result.Success)
+                        return result.Output.Length > 0 ? result.Output : "(code ran successfully but produced no output)";
+                    return $"Execution failed: {result.Error}"
+                        + (result.Output.Length > 0 ? $"\nOutput before failure:\n{result.Output}" : string.Empty);
+                },
+                "execute_javascript",
+                "Executes JavaScript code in a secure sandbox and returns its console output and the value of the final expression. "
+                + "There is no network, filesystem, DOM, or module access; use console.log to print intermediate results. "
+                + "If execution fails, the error is returned so the code can be fixed and retried.");
 
         // Images and PDFs go to the model as base64 data URIs (DataContent);
         // plain-text files are inlined as prompt text.

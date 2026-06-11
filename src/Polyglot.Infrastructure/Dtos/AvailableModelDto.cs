@@ -9,6 +9,7 @@ public record AvailableModelDto
     public required int ContextLength { get; init; }
     public required List<string> InputModalities { get; init; }
     public required List<string> OutputModalities { get; init; }
+    public required List<string> SupportedParameters { get; init; }
     public required decimal InputPricePer1M { get; init; }
     public required decimal OutputPricePer1M { get; init; }
 }

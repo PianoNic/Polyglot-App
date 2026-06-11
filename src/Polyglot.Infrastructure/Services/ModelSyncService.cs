@@ -64,6 +64,7 @@ namespace Polyglot.Infrastructure.Services
                             row.ContextLength = f.ContextLength;
                             row.InputModalities = f.InputModalities;
                             row.OutputModalities = f.OutputModalities;
+                            row.SupportedParameters = f.SupportedParameters;
                             row.PromptPricePerMillion = f.InputPricePer1M;
                             row.CompletionPricePerMillion = f.OutputPricePer1M;
                         }
@@ -76,6 +77,7 @@ namespace Polyglot.Infrastructure.Services
                                 ContextLength = f.ContextLength,
                                 InputModalities = f.InputModalities,
                                 OutputModalities = f.OutputModalities,
+                                SupportedParameters = f.SupportedParameters,
                                 PromptPricePerMillion = f.InputPricePer1M,
                                 CompletionPricePerMillion = f.OutputPricePer1M,
                             });

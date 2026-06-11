@@ -467,6 +467,56 @@ public class SendMessageCommandTests
     }
 
     [Test]
+    public async Task Handle_ModelSupportsTools_AttachesJsExecutionTool()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db, supportedParameters: ["tools", "temperature"]);
+
+        ChatOptions? captured = null;
+        var chatClient = Substitute.For<IChatClient>();
+        chatClient
+            .GetStreamingResponseAsync(
+                Arg.Any<IEnumerable<ChatMessage>>(),
+                Arg.Do<ChatOptions?>(o => captured = o),
+                Arg.Any<CancellationToken>())
+            .Returns(FakeUpdates("Hi"));
+        var factory = Substitute.For<IChatClientFactory>();
+        factory.Create(Arg.Any<string>()).Returns(chatClient);
+        var handler = CreateHandler(db, user.Id, chatClientFactory: factory);
+
+        await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
+
+        await Assert.That(captured).IsNotNull();
+        await Assert.That(captured!.Tools!.Count).IsEqualTo(1);
+        await Assert.That(captured.Tools![0].Name).IsEqualTo("execute_javascript");
+    }
+
+    [Test]
+    public async Task Handle_ModelWithoutToolSupport_AttachesNoTools()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db);
+
+        ChatOptions? captured = null;
+        var chatClient = Substitute.For<IChatClient>();
+        chatClient
+            .GetStreamingResponseAsync(
+                Arg.Any<IEnumerable<ChatMessage>>(),
+                Arg.Do<ChatOptions?>(o => captured = o),
+                Arg.Any<CancellationToken>())
+            .Returns(FakeUpdates("Hi"));
+        var factory = Substitute.For<IChatClientFactory>();
+        factory.Create(Arg.Any<string>()).Returns(chatClient);
+        var handler = CreateHandler(db, user.Id, chatClientFactory: factory);
+
+        await Collect(handler.Handle(new SendMessageCommand(null, "Hello", "gpt-4"), CancellationToken.None));
+
+        await Assert.That(captured).IsNull();
+    }
+
+    [Test]
     public async Task Handle_UnknownAttachment_EmitsError()
     {
         var db = CreateDb();
@@ -516,14 +566,15 @@ public class SendMessageCommandTests
         return user;
     }
 
-    private static async Task SeedModel(PolyglotDbContext db)
+    private static async Task SeedModel(PolyglotDbContext db, List<string>? supportedParameters = null)
     {
         db.Models.Add(new Model
         {
             ModelId = "gpt-4",
             Name = "GPT-4",
             PromptPricePerMillion = 3m,
-            CompletionPricePerMillion = 15m
+            CompletionPricePerMillion = 15m,
+            SupportedParameters = supportedParameters ?? []
         });
         await db.SaveChangesAsync();
     }
@@ -605,6 +656,7 @@ public class SendMessageCommandTests
             db,
             chatClientFactory ?? FakeStreamingClient("ok"),
             creditsService ?? Substitute.For<ICreditsService>(),
-            Substitute.For<IChatTitleGenerator>());
+            Substitute.For<IChatTitleGenerator>(),
+            new JsExecutionService());
     }
 }
