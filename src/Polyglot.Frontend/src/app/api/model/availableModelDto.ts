@@ -17,6 +17,7 @@ export interface AvailableModelDto {
     contextLength: number;
     inputModalities: Array<string>;
     outputModalities: Array<string>;
+    supportedParameters: Array<string>;
     inputPricePer1M: number;
     outputPricePer1M: number;
 }

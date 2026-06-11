@@ -25,6 +25,10 @@ namespace Polyglot.Infrastructure.Clients
                 var inputModalities = architecture.GetProperty("input_modalities").EnumerateArray().Select(m => m.GetString()!).ToList();
                 var outputModalities = architecture.GetProperty("output_modalities").EnumerateArray().Select(m => m.GetString()!).ToList();
 
+                List<string> supportedParameters = model.TryGetProperty("supported_parameters", out var sp)
+                    ? sp.EnumerateArray().Select(p => p.GetString()!).ToList()
+                    : [];
+
                 var pricing = model.GetProperty("pricing");
                 var promptPrice = decimal.Parse(pricing.GetProperty("prompt").GetString() ?? "0") * 1_000_000;
                 var completionPrice = decimal.Parse(pricing.GetProperty("completion").GetString() ?? "0") * 1_000_000;
@@ -40,6 +44,7 @@ namespace Polyglot.Infrastructure.Clients
                     ContextLength = contextLength,
                     InputModalities = inputModalities,
                     OutputModalities = outputModalities,
+                    SupportedParameters = supportedParameters,
                     InputPricePer1M = promptPrice,
                     OutputPricePer1M = completionPrice,
                 });

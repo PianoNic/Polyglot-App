@@ -32,6 +32,12 @@ namespace Polyglot.Infrastructure.Extensions
 
     internal sealed class OpenAIChatClientFactory(OpenAIClient openAiClient) : IChatClientFactory
     {
-        public IChatClient Create(string modelId) => openAiClient.GetChatClient(modelId).AsIChatClient();
+        // UseFunctionInvocation runs the tool-call loop client-side whenever
+        // ChatOptions.Tools is populated; without tools it is a pass-through.
+        public IChatClient Create(string modelId) => openAiClient.GetChatClient(modelId)
+            .AsIChatClient()
+            .AsBuilder()
+            .UseFunctionInvocation()
+            .Build();
     }
 }
