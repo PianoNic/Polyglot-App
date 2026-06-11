@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
@@ -18,11 +19,20 @@ namespace Polyglot.Application.Command
 
     public abstract record ChatStreamEvent;
     public sealed record ChatStreamChunk(string Text) : ChatStreamEvent;
+    public sealed record ChatStreamToolCall(string Name, string Input) : ChatStreamEvent;
+    public sealed record ChatStreamToolResult(string Name, string Output) : ChatStreamEvent;
     public sealed record ChatStreamDone(SendMessageDto Result) : ChatStreamEvent;
     public sealed record ChatStreamError(string Message) : ChatStreamEvent;
 
     public class SendMessageCommandHandler(IUserService userService, PolyglotDbContext dbContext, IChatClientFactory chatClientFactory, ICreditsService creditsService, IChatTitleGenerator titleGenerator, IJsExecutionService jsExecutionService) : IStreamCommandHandler<SendMessageCommand, ChatStreamEvent>
     {
+        // Tool steps are serialized for human display in the chat UI, so keep
+        // characters like '+' readable instead of \u-escaped.
+        private static readonly JsonSerializerOptions ToolStepJsonOptions = new(JsonSerializerOptions.Web)
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
         public async IAsyncEnumerable<ChatStreamEvent> Handle(SendMessageCommand command, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var preflight = await PreflightAsync(command, cancellationToken);
@@ -41,6 +51,8 @@ namespace Polyglot.Application.Command
             UsageDetails? usage = null;
             ChatFinishReason? finishReason = null;
             string? streamError = null;
+            var toolSteps = new List<ToolStep>();
+            var pendingToolCalls = new Dictionary<string, ToolStep>();
 
             // Tool gating: only models that advertise tool support get tools attached.
             ChatOptions? chatOptions = null;
@@ -79,6 +91,24 @@ namespace Polyglot.Application.Command
                             assistantContent.Append(text);
                             yield return new ChatStreamChunk(text);
                             break;
+                        case FunctionCallContent fcc:
+                        {
+                            var input = fcc.Arguments is null ? string.Empty : JsonSerializer.Serialize(fcc.Arguments, ToolStepJsonOptions);
+                            var step = new ToolStep(fcc.Name, input);
+                            toolSteps.Add(step);
+                            pendingToolCalls[fcc.CallId] = step;
+                            yield return new ChatStreamToolCall(fcc.Name, input);
+                            break;
+                        }
+                        case FunctionResultContent frc:
+                        {
+                            var step = pendingToolCalls.GetValueOrDefault(frc.CallId);
+                            var output = frc.Result?.ToString() ?? string.Empty;
+                            if (step is not null)
+                                step.Output = output;
+                            yield return new ChatStreamToolResult(step?.Name ?? "tool", output);
+                            break;
+                        }
                         case UsageContent uc:
                             // Tool calls produce one completion per loop turn; bill them all.
                             if (usage is null)
@@ -102,7 +132,7 @@ namespace Polyglot.Application.Command
                 yield break;
             }
 
-            var done = await FinalizeAsync(command, ctx, assistantContent.ToString(), finishReason, usage, cancellationToken);
+            var done = await FinalizeAsync(command, ctx, assistantContent.ToString(), finishReason, usage, toolSteps, cancellationToken);
             yield return new ChatStreamDone(done);
         }
 
@@ -231,7 +261,7 @@ namespace Polyglot.Application.Command
             };
         }
 
-        private async Task<SendMessageDto> FinalizeAsync(SendMessageCommand command, PreflightContext ctx, string assistantText, ChatFinishReason? finishReason, UsageDetails? usage, CancellationToken cancellationToken)
+        private async Task<SendMessageDto> FinalizeAsync(SendMessageCommand command, PreflightContext ctx, string assistantText, ChatFinishReason? finishReason, UsageDetails? usage, List<ToolStep> toolSteps, CancellationToken cancellationToken)
         {
             var promptTokens = (int)(usage?.InputTokenCount ?? 0);
             var completionTokens = (int)(usage?.OutputTokenCount ?? 0);
@@ -250,6 +280,7 @@ namespace Polyglot.Application.Command
                 Role = MessageRole.Assistant,
                 Content = assistantText,
                 Model = command.Model,
+                ToolCalls = toolSteps.Count > 0 ? JsonSerializer.Serialize(toolSteps, ToolStepJsonOptions) : null,
                 FinishReason = finishReason?.ToString(),
                 TokenUsage = $"{promptTokens}/{completionTokens}",
                 SequenceNumber = ctx.UserSequence + 1
@@ -317,6 +348,15 @@ namespace Polyglot.Application.Command
                 return new TextContent($"[Attached file: {attachment.FileName}]\n{System.Text.Encoding.UTF8.GetString(attachment.Data)}");
 
             return new DataContent(attachment.Data, attachment.MediaType);
+        }
+
+        // Serialized onto Message.ToolCalls as a JSON array so the chain of
+        // thought can be re-rendered when a chat is reloaded.
+        private sealed class ToolStep(string name, string input)
+        {
+            public string Name { get; } = name;
+            public string Input { get; } = input;
+            public string? Output { get; set; }
         }
 
         private sealed class PreflightResult

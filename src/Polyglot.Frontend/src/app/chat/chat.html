@@ -67,22 +67,80 @@
           } @else {
             <pk-message class="max-w-[85%] self-start">
               <pk-message-avatar src="" alt="Assistant" fallback="AI" />
-              <pk-message-content [markdown]="true" [content]="m.content" class="bg-transparent p-0" />
+              <div class="flex min-w-0 flex-col gap-2">
+                @if (toolSteps(m); as steps) {
+                  @if (steps.length > 0) {
+                    <pk-chain-of-thought>
+                      @for (s of steps; track $index; let isLast = $last) {
+                        <pk-chain-of-thought-step [last]="isLast">
+                          <pk-chain-of-thought-trigger>Ran {{ s.name }}</pk-chain-of-thought-trigger>
+                          <pk-chain-of-thought-content>
+                            <pk-chain-of-thought-item>
+                              <pk-code-block>
+                                <pk-code-block-code [code]="toolInput(s)" language="javascript" />
+                              </pk-code-block>
+                            </pk-chain-of-thought-item>
+                            @if (s.output !== null) {
+                              <pk-chain-of-thought-item>
+                                <pk-code-block>
+                                  <pk-code-block-code [code]="s.output" language="text" />
+                                </pk-code-block>
+                              </pk-chain-of-thought-item>
+                            }
+                          </pk-chain-of-thought-content>
+                        </pk-chain-of-thought-step>
+                      }
+                    </pk-chain-of-thought>
+                  }
+                }
+                <pk-message-content [markdown]="true" [content]="m.content" class="bg-transparent p-0" />
+              </div>
             </pk-message>
           }
         }
-        @if (store.streamingText()) {
+        @if (store.streamingText() || store.streamToolSteps().length > 0) {
           <pk-message class="max-w-[85%] self-start">
             <pk-message-avatar src="" alt="Assistant" fallback="AI" />
-            <pk-message-content class="bg-transparent p-0">
-              <pk-response-stream
-                [textStream]="store.streamingText()"
-                [speed]="10"
-                [adaptive]="true"
-                [done]="store.streamDone()"
-                (finished)="store.commitStream()"
-              />
-            </pk-message-content>
+            <div class="flex min-w-0 flex-col gap-2">
+              @if (store.streamToolSteps().length > 0) {
+                <pk-chain-of-thought>
+                  @for (s of store.streamToolSteps(); track $index; let isLast = $last) {
+                    <pk-chain-of-thought-step [last]="isLast">
+                      <pk-chain-of-thought-trigger>
+                        {{ s.output === null ? 'Running' : 'Ran' }} {{ s.name }}
+                      </pk-chain-of-thought-trigger>
+                      <pk-chain-of-thought-content>
+                        <pk-chain-of-thought-item>
+                          <pk-code-block>
+                            <pk-code-block-code [code]="toolInput(s)" language="javascript" />
+                          </pk-code-block>
+                        </pk-chain-of-thought-item>
+                        @if (s.output !== null) {
+                          <pk-chain-of-thought-item>
+                            <pk-code-block>
+                              <pk-code-block-code [code]="s.output" language="text" />
+                            </pk-code-block>
+                          </pk-chain-of-thought-item>
+                        }
+                      </pk-chain-of-thought-content>
+                    </pk-chain-of-thought-step>
+                  }
+                </pk-chain-of-thought>
+              }
+              @if (store.streamingText()) {
+                <pk-message-content class="bg-transparent p-0">
+                  <pk-response-stream
+                    [textStream]="store.streamingText()"
+                    [speed]="10"
+                    [adaptive]="true"
+                    [done]="store.streamDone()"
+                    (finished)="store.commitStream()"
+                  />
+                </pk-message-content>
+              } @else {
+                <pk-loader variant="text-shimmer" text="Working..." />
+              }
+            </div>
           </pk-message>
         } @else if (store.isSending()) {
           <div class="flex items-center gap-3 pl-11">

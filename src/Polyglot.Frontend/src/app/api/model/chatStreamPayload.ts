@@ -16,6 +16,9 @@ export interface ChatStreamPayload {
     text?: string | null;
     result?: SendMessageDto;
     error?: string | null;
+    toolName?: string | null;
+    toolInput?: string | null;
+    toolOutput?: string | null;
 }
 export namespace ChatStreamPayload {
 }

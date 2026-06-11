@@ -33,6 +33,14 @@ export type SendResult =
   | { kind: 'sent'; newId: string | null }
   | { kind: 'error'; error: string };
 
+/** One tool invocation in the assistant's chain of thought. Matches the
+ *  camelCase JSON persisted on MessageDto.toolCalls. */
+export interface ToolStep {
+  name: string;
+  input: string;
+  output: string | null;
+}
+
 type ChatStoreState = {
   chats: Conversation[];
   activeChatId: string | null;
@@ -43,6 +51,7 @@ type ChatStoreState = {
   webSearchEnabled: boolean;
   isSending: boolean;
   streamingText: string;
+  streamToolSteps: ToolStep[];
   streamDone: boolean;
   pendingAttachments: AttachmentDto[];
   isLoadingChat: boolean;
@@ -61,6 +70,7 @@ export const initialChatStore: ChatStoreState = {
   webSearchEnabled: false,
   isSending: false,
   streamingText: '',
+  streamToolSteps: [],
   streamDone: false,
   pendingAttachments: [],
   isLoadingChat: false,
@@ -205,6 +215,7 @@ export const ChatStore = signalStore(
         isSending: true,
         sendError: null,
         streamingText: '',
+        streamToolSteps: [],
         streamDone: false,
         pendingAttachments: [],
         messages: [...state.messages, optimistic],
@@ -223,7 +234,21 @@ export const ChatStore = signalStore(
             'events',
             true,
           ),
-          (token) => patchState(store, (state) => ({ streamingText: state.streamingText + token })),
+          {
+            onToken: (token) =>
+              patchState(store, (state) => ({ streamingText: state.streamingText + token })),
+            onToolCall: (name, input) =>
+              patchState(store, (state) => ({
+                streamToolSteps: [...state.streamToolSteps, { name, input, output: null }],
+              })),
+            onToolResult: (name, output) =>
+              patchState(store, (state) => {
+                const steps = [...state.streamToolSteps];
+                const idx = steps.findIndex((s) => s.name === name && s.output === null);
+                if (idx !== -1) steps[idx] = { ...steps[idx], output };
+                return { streamToolSteps: steps };
+              }),
+          },
         );
 
         // Hold the final messages until the reveal animation catches up —
@@ -250,6 +275,7 @@ export const ChatStore = signalStore(
           sendError: message,
           isSending: false,
           streamingText: '',
+          streamToolSteps: [],
           streamDone: false,
           pendingAttachments: attachments,
         });
@@ -269,6 +295,7 @@ export const ChatStore = signalStore(
           response.assistantMessage,
         ],
         streamingText: '',
+        streamToolSteps: [],
         streamDone: false,
       });
     }
@@ -336,6 +363,12 @@ function byUpdatedDesc(a: Conversation, b: Conversation): number {
   return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
 }
 
+interface StreamHandlers {
+  onToken: (token: string) => void;
+  onToolCall: (name: string, input: string) => void;
+  onToolResult: (name: string, output: string) => void;
+}
+
 /**
  * Consumes the SSE stream from POST /api/Chat. The generated client requests
  * `text/event-stream` with `responseType: 'text'`, so progress events carry the
@@ -343,7 +376,7 @@ function byUpdatedDesc(a: Conversation, b: Conversation): number {
  */
 function streamSend(
   events$: Observable<HttpEvent<ChatStreamPayload>>,
-  onToken: (token: string) => void,
+  handlers: StreamHandlers,
 ): Promise<SendMessageDto> {
   return new Promise((resolve, reject) => {
     let parsedUpTo = 0;
@@ -359,7 +392,11 @@ function streamSend(
         // the same handling works over any transport, e.g. WebSockets.
         const payload = JSON.parse(data) as ChatStreamPayload;
         if (payload.type === ChatStreamPayloadType.Chunk && payload.text) {
-          onToken(payload.text);
+          handlers.onToken(payload.text);
+        } else if (payload.type === ChatStreamPayloadType.ToolCall && payload.toolName) {
+          handlers.onToolCall(payload.toolName, payload.toolInput ?? '');
+        } else if (payload.type === ChatStreamPayloadType.ToolResult && payload.toolName) {
+          handlers.onToolResult(payload.toolName, payload.toolOutput ?? '');
         } else if (payload.type === ChatStreamPayloadType.Done && payload.result) {
           result = payload.result;
         } else if (payload.type === ChatStreamPayloadType.Error) {

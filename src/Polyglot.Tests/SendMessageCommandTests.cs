@@ -517,6 +517,50 @@ public class SendMessageCommandTests
     }
 
     [Test]
+    public async Task Handle_ToolCalls_EmitsToolEventsAndPersistsSteps()
+    {
+        var db = CreateDb();
+        var user = await SeedUserWithCredits(db, credits: 10_000);
+        await SeedModel(db, supportedParameters: ["tools"]);
+
+        static async IAsyncEnumerable<ChatResponseUpdate> Updates()
+        {
+            await Task.Yield();
+            yield return new ChatResponseUpdate(ChatRole.Assistant, [new FunctionCallContent("call-1", "execute_javascript", new Dictionary<string, object?> { ["code"] = "1+1" })]);
+            yield return new ChatResponseUpdate(ChatRole.Tool, [new FunctionResultContent("call-1", "2")]);
+            yield return new ChatResponseUpdate(ChatRole.Assistant, "The answer is 2");
+            yield return new ChatResponseUpdate
+            {
+                FinishReason = ChatFinishReason.Stop,
+                Contents = [new UsageContent(new UsageDetails { InputTokenCount = 10, OutputTokenCount = 5, TotalTokenCount = 15 })]
+            };
+        }
+
+        var chatClient = Substitute.For<IChatClient>();
+        chatClient
+            .GetStreamingResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions>(), Arg.Any<CancellationToken>())
+            .Returns(Updates());
+        var factory = Substitute.For<IChatClientFactory>();
+        factory.Create(Arg.Any<string>()).Returns(chatClient);
+        var handler = CreateHandler(db, user.Id, chatClientFactory: factory);
+
+        var events = await Collect(handler.Handle(new SendMessageCommand(null, "What is 1+1?", "gpt-4"), CancellationToken.None));
+
+        await Assert.That(events[0]).IsTypeOf<ChatStreamToolCall>();
+        await Assert.That(((ChatStreamToolCall)events[0]).Name).IsEqualTo("execute_javascript");
+        await Assert.That(((ChatStreamToolCall)events[0]).Input).Contains("1+1");
+        await Assert.That(events[1]).IsTypeOf<ChatStreamToolResult>();
+        await Assert.That(((ChatStreamToolResult)events[1]).Output).IsEqualTo("2");
+        await Assert.That(events[^1]).IsTypeOf<ChatStreamDone>();
+
+        var persisted = ((ChatStreamDone)events[^1]).Result.AssistantMessage.ToolCalls;
+        await Assert.That(persisted).IsNotNull();
+        await Assert.That(persisted!).Contains("execute_javascript");
+        await Assert.That(persisted!).Contains("1+1");
+        await Assert.That(persisted!).Contains("\"output\":\"2\"");
+    }
+
+    [Test]
     public async Task Handle_UnknownAttachment_EmitsError()
     {
         var db = CreateDb();

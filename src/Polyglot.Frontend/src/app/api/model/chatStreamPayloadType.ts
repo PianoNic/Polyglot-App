@@ -12,7 +12,9 @@
 export const ChatStreamPayloadType = {
     Chunk: 'Chunk',
     Done: 'Done',
-    Error: 'Error'
+    Error: 'Error',
+    ToolCall: 'ToolCall',
+    ToolResult: 'ToolResult'
 } as const;
 export type ChatStreamPayloadType = typeof ChatStreamPayloadType[keyof typeof ChatStreamPayloadType];
 
